@@ -164,9 +164,7 @@ thread_t *chThdCreateFromMemoryPool(memory_pool_t *mp, const char *name,
   chDbgCheck(mp != NULL);
 
   size = MEM_ALIGN_PREV(mp->object_size, PORT_STACK_ALIGN);
-  chDbgAssert((mp->provider == NULL) ||
-              (mp->align >= PORT_WORKING_AREA_ALIGN),
-              "invalid pool alignment");
+  chDbgAssert(mp->align >= PORT_WORKING_AREA_ALIGN, "invalid pool alignment");
   chDbgAssert(size >= THD_WORKING_AREA_SIZE(0), "invalid pool object size");
 
   wbase = chPoolAlloc(mp);

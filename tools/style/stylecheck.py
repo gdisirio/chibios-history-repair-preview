@@ -50,11 +50,7 @@ def main():
     if re.match(r"\s*/\*[^\s\*=]", comment):
       style("detected glued comment start")
 
-    # A leading lower-case word is reported, EXCEPT for preprocessor guard
-    # comments such as "#endif /* defined(X) */" / "/* !defined(X) */", where
-    # "defined" is the C operator and must stay lower case.
-    if re.match(r"\s*/\*\s*[a-z]", comment) and \
-       not re.match(r"\s*/\*\s*!?defined\b", comment):
+    if re.match(r"\s*/\*\s*[a-z]", comment):
       style("detected lower case comment start")
 
   for raw_line in c_source:
@@ -89,11 +85,8 @@ def main():
     else:
       emptycnt = 0
 
-    # Blank out ALL string literals on the line (not just the first) so that
-    # operators, commas, etc. inside string literals are not style-checked
-    # (e.g. inline-asm constraints "=r", or a comma inside a quoted token).
-    line = line.replace('\\"', "")
-    line = re.sub(r"\"[^\"]*\"", "_string_", line)
+    line = line.replace('\\"', "", 1)
+    line = re.sub(r"\"[^\"]*\"", "_string_", line, count=1)
 
     # Minimal state machine to track comment parsing for follow-up checks.
     if state == "start":

@@ -658,6 +658,8 @@
  */
 #define rccResetTIM3() rccResetAPBR1(RCC_APBRSTR1_TIM3RST)
 
+
+
 /**
  * @brief   Enables the TIM6 peripheral clock.
  *
@@ -704,6 +706,8 @@
  */
 #define rccResetTIM7() rccResetAPBR1(RCC_APBRSTR1_TIM7RST)
 
+
+
 /**
  * @brief   Enables the TIM15 peripheral clock.
  *
@@ -749,6 +753,7 @@
  * @api
  */
 #define rccResetTIM16() rccResetAPBR2(RCC_APBRSTR2_TIM16RST)
+
 
 /** @} */
 
@@ -921,6 +926,10 @@
  * @api
  */
 #define rccResetUART4() rccResetAPBR1(RCC_APBRSTR1_USART4RST)
+
+
+
+
 
 /**
  * @brief   Enables the LPUART1 peripheral clock.

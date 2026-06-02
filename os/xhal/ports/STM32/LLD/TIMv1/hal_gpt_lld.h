@@ -194,6 +194,7 @@
 #define STM32_GPT_USE_TIM17                 FALSE
 #endif
 
+
 /**
  * @brief   GPTD20 driver enable switch.
  * @details If set to @p TRUE the support for GPTD20 is included.
