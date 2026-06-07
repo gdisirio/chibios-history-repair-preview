@@ -141,12 +141,12 @@ typedef uintptr_t eth_receive_handle_t;
 typedef uintptr_t eth_transmit_handle_t;
 
 /**
- * @brief       Type of structure representing an ETH driver.
+ * @brief       Type of structure representing a ETH driver.
  */
 typedef struct hal_eth_driver hal_eth_driver_c;
 
 /**
- * @brief       Type of structure representing an ETH configuration.
+ * @brief       Type of structure representing a ETH configuration.
  */
 typedef struct hal_eth_config hal_eth_config_t;
 
@@ -173,9 +173,9 @@ struct hal_eth_config {
   const uint8_t             *mac_address;
   /* End of the mandatory fields.*/
   eth_lld_config_fields;
-#if (defined(ETH_CONFIG_EXT_FIELDS)) || defined (__DOXYGEN__)
+#if (defined(ETH_CONFIG_EXT_FIELS)) || defined (__DOXYGEN__)
   ETH_CONFIG_EXT_FIELDS
-#endif /* defined(ETH_CONFIG_EXT_FIELDS) */
+#endif /* defined(ETH_CONFIG_EXT_FIELS) */
 };
 
 /**
@@ -201,14 +201,14 @@ struct eth_configurations {
  * @class       hal_eth_driver_c
  * @extends     hal_cb_driver_c
  *
- * @brief       Class of an ETH driver.
+ * @brief       Class of a ETH driver.
  *
  * @name        Class @p hal_eth_driver_c structures
  * @{
  */
 
 /**
- * @brief       Type of a network driver class.
+ * @brief       Type of a ETH driver class.
  */
 typedef struct hal_eth_driver hal_eth_driver_c;
 
@@ -229,7 +229,7 @@ struct hal_eth_driver_vmt {
 };
 
 /**
- * @brief       Structure representing a network driver class.
+ * @brief       Structure representing a ETH driver class.
  */
 struct hal_eth_driver {
   /**
@@ -293,7 +293,7 @@ struct hal_eth_driver {
    * @brief       Cached ETH callback event flags.
    */
   eventflags_t              lastflags;
-#if defined(ETH_DRIVER_EXT_FIELDS)
+#if defined(ETH_DRIVER_EXT_FIELS)
   ETH_DRIVER_EXT_FIELDS
 #endif
   /* End of the mandatory fields.*/
@@ -315,7 +315,7 @@ extern "C" {
   void __eth_stop_impl(void *ip);
   const void *__eth_setcfg_impl(void *ip, const void *config);
   const void *__eth_selcfg_impl(void *ip, unsigned cfgnum);
-  bool ethPollLinkStatusX(void *ip);
+  bool ethPollLinkStatus(void *ip);
 #if (ETH_USE_SYNCHRONIZATION == TRUE) || defined (__DOXYGEN__)
   eth_receive_handle_t ethWaitReceiveHandle(void *ip, sysinterval_t timeout);
   eth_transmit_handle_t ethWaitTransmitHandle(void *ip, sysinterval_t timeout);
@@ -425,10 +425,10 @@ static inline bool ethIsTXHandleValidX(void *ip, eth_transmit_handle_t txh) {
  * @param[in,out] ip            Pointer to a @p hal_eth_driver_c instance.
  * @param[in]     rxh           Receive handle.
  *
- * @xclass
+ * @api
  */
 CC_FORCE_INLINE
-static inline void ethReleaseReceiveHandleX(void *ip, eth_receive_handle_t rxh) {
+static inline void ethReleaseReceiveHandle(void *ip, eth_receive_handle_t rxh) {
   hal_eth_driver_c *self = (hal_eth_driver_c *)ip;
 
   eth_lld_release_receive_handle(self, rxh);
@@ -438,13 +438,13 @@ static inline void ethReleaseReceiveHandleX(void *ip, eth_receive_handle_t rxh) 
  * @brief       Releases and transmits a frame.
  *
  * @param[in,out] ip            Pointer to a @p hal_eth_driver_c instance.
- * @param[in]     txh           Transmit handle.
+ * @param[in]     txh           Transmi] handle.
  *
- * @xclass
+ * @api
  */
 CC_FORCE_INLINE
-static inline void ethReleaseTransmitHandleX(void *ip,
-                                             eth_transmit_handle_t txh) {
+static inline void ethReleaseTransmitHandle(void *ip,
+                                            eth_transmit_handle_t txh) {
   hal_eth_driver_c *self = (hal_eth_driver_c *)ip;
 
   eth_lld_release_transmit_handle(self, txh);
@@ -462,18 +462,18 @@ static inline void ethReleaseTransmitHandleX(void *ip,
  *                              specified in the parameter @p size if there are
  *                              no more bytes to read.
  *
- * @xclass
+ * @api
  */
 CC_FORCE_INLINE
-static inline size_t ethReadReceiveHandleX(void *ip, eth_receive_handle_t rxh,
-                                           uint8_t *bp, size_t n) {
+static inline size_t ethReadReceiveHandle(void *ip, eth_receive_handle_t rxh,
+                                          uint8_t *bp, size_t n) {
   hal_eth_driver_c *self = (hal_eth_driver_c *)ip;
 
   return eth_lld_read_receive_handle(self, rxh, bp, n);
 }
 
 /**
- * @brief       Writes data sequentially into a transmit frame.
+ * @brief       Reads data sequentially from a received frame.
  *
  * @param[in,out] ip            Pointer to a @p hal_eth_driver_c instance.
  * @param[in]     txh           Transmit handle.
@@ -484,12 +484,12 @@ static inline size_t ethReadReceiveHandleX(void *ip, eth_receive_handle_t rxh,
  *                              specified in the parameter @p size if the
  *                              maximum frame size is reached.
  *
- * @xclass
+ * @api
  */
 CC_FORCE_INLINE
-static inline size_t ethWriteTransmitHandleX(void *ip,
-                                             eth_transmit_handle_t txh,
-                                             const uint8_t *bp, size_t n) {
+static inline size_t ethWriteTransmitHandle(void *ip,
+                                            eth_transmit_handle_t txh,
+                                            const uint8_t *bp, size_t n) {
   hal_eth_driver_c *self = (hal_eth_driver_c *)ip;
 
   return eth_lld_write_transmit_handle(self, txh, bp, n);

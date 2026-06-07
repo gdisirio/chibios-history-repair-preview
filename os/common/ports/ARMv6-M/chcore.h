@@ -187,11 +187,11 @@
 
 /* Handling a GCC problem impacting ARMv6-M.*/
 #if defined(__GNUC__) && !defined(PORT_IGNORE_GCC_VERSION_CHECK)
-  #if (__GNUC__ > 5) && (__GNUC__ < 10)
-    #define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
-    #if (__GNUC__ == 7) && (GCC_VERSION >= 70500)
-    #elif (__GNUC__ == 8) && (GCC_VERSION >= 80400)
-    #elif (__GNUC__ == 9) && (GCC_VERSION >= 90300)
+  #if ( __GNUC__ > 5 ) && ( __GNUC__ < 10 )
+    #define GCC_VERSION ( __GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ )
+    #if ( __GNUC__ == 7 ) && ( GCC_VERSION >= 70500 )
+    #elif ( __GNUC__ == 8 ) && ( GCC_VERSION >= 80400 )
+    #elif ( __GNUC__ == 9 ) && ( GCC_VERSION >= 90300 )
     #else
       #warning "This compiler has a know problem with Cortex-M0, see GCC bugs: 88167, 88656."
     #endif
@@ -348,6 +348,19 @@ struct port_context {
  * @brief   Optimized thread function declaration macro.
  */
 #define PORT_THD_FUNCTION(tname, arg) void tname(void *arg)
+
+/**
+ * @brief   Platform dependent part of the @p chThdCreateI() API.
+ * @details This code usually setup the context switching frame represented
+ *          by an @p port_intctx structure.
+ */
+#define PORT_SETUP_CONTEXT(tp, wbase, wtop, pf, arg) do {                   \
+  (tp)->ctx.sp = (struct port_intctx *)(void *)                             \
+                   ((uint8_t *)(wtop) - sizeof (struct port_intctx));       \
+  (tp)->ctx.sp->r4 = (uint32_t)(pf);                                        \
+  (tp)->ctx.sp->r5 = (uint32_t)(arg);                                       \
+  (tp)->ctx.sp->lr = (uint32_t)__port_thread_start;                         \
+} while (false)
 
 /**
  * @brief   Computes the thread working area global size.
@@ -654,50 +667,6 @@ static inline void port_wait_for_interrupt(void) {
 #if CORTEX_ENABLE_WFI_IDLE == TRUE
   __WFI();
 #endif
-}
-
-/**
- * @brief   Initialization of the base part of a thread context.
- * @details This function initializes those context fields which must be
- *          valid also for thread objects representing already-running
- *          execution flows (the boot thread of each instance), which do
- *          not go through the full creation path. Only fields which are
- *          read before being ever written by a context switch belong
- *          here.
- * @note    It is also invoked by @p port_setup_context() as part of the
- *          full context initialization.
- *
- * @param[out] ctxp     pointer to the port-dependent context structure
- */
-static inline void port_setup_context_base(struct port_context *ctxp) {
-
-  (void)ctxp;
-}
-
-/**
- * @brief   Platform dependent thread context setup.
- * @details This function is invoked by the thread creation APIs in order
- *          to initialize the port-dependent part of the thread context.
- *
- * @param[out] ctxp     pointer to the port-dependent context structure
- * @param[in] wbase     working area base address
- * @param[in] wtop      working area top address
- * @param[in] pf        thread function pointer
- * @param[in] arg       thread function argument
- */
-static inline void port_setup_context(struct port_context *ctxp,
-                                      void *wbase, void *wtop,
-                                      void (*pf)(void *), void *arg) {
-
-  port_setup_context_base(ctxp);
-
-  (void)wbase;
-
-  ctxp->sp = (struct port_intctx *)(void *)((uint8_t *)wtop -
-                                            sizeof (struct port_intctx));
-  ctxp->sp->r4 = (uint32_t)pf;
-  ctxp->sp->r5 = (uint32_t)arg;
-  ctxp->sp->lr = (uint32_t)__port_thread_start;
 }
 
 #endif /* !defined(_FROM_ASM_) */
