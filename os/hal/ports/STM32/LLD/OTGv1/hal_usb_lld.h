@@ -244,7 +244,6 @@
 #define rccResetOTG_HS                      rccResetUSB1_OTG_HS
 #define rccEnableOTG_HSULPI                 rccEnableUSB1_HSULPI
 #define rccDisableOTG_HSULPI                rccDisableUSB1_HSULPI
-#define rccDisableOTG_FSULPI                rccDisableUSB2_HSULPI
 #else
 #error "unsupported STM32 platform for OTG functionality"
 #endif

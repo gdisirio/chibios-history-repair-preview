@@ -50,6 +50,7 @@
 /* Module interrupt handlers.                                                */
 /*===========================================================================*/
 
+
 #if PORT_USE_LOCAL_SYSTICK == TRUE
 CH_IRQ_HANDLER(__sb_vector0) {
 

@@ -659,8 +659,6 @@ struct hal_sio_driver {
 };
 /** @} */
 
-#if (SIO_USE_BUFFERING == TRUE) || defined (__DOXYGEN__)
-
 /**
  * @class       hal_buffered_sio_c
  * @extends     hal_base_driver_c
@@ -755,8 +753,6 @@ struct hal_buffered_sio {
 };
 /** @} */
 
-#endif /* SIO_USE_BUFFERING == TRUE */
-
 /*===========================================================================*/
 /* External declarations.                                                    */
 /*===========================================================================*/
@@ -783,7 +779,6 @@ extern "C" {
   msg_t sioSynchronizeTX(void *ip, sysinterval_t timeout);
   msg_t sioSynchronizeTXEnd(void *ip, sysinterval_t timeout);
 #endif /* SIO_USE_SYNCHRONIZATION == TRUE */
-#if (SIO_USE_BUFFERING == TRUE) || defined (__DOXYGEN__)
   /* Methods of hal_buffered_sio_c.*/
   void *__bsio_objinit_impl(void *ip, const void *vmt, hal_sio_driver_c *siop,
                             uint8_t *ib, size_t ibsize, uint8_t *ob,
@@ -794,7 +789,6 @@ extern "C" {
   const void *__bsio_setcfg_impl(void *ip, const void *config);
   void bsIncomingDataI(void *ip, uint8_t b);
   msg_t bsRequestDataI(void *ip);
-#endif /* SIO_USE_BUFFERING == TRUE */
   /* Regular functions.*/
   void sioInit(void);
 #ifdef __cplusplus
@@ -826,7 +820,6 @@ static inline hal_sio_driver_c *sioObjectInit(hal_sio_driver_c *self) {
 }
 /** @} */
 
-#if (SIO_USE_BUFFERING == TRUE) || defined (__DOXYGEN__)
 /**
  * @name        Default constructor of hal_buffered_sio_c
  * @{
@@ -856,9 +849,7 @@ static inline hal_buffered_sio_c *bsioObjectInit(hal_buffered_sio_c *self,
                              ob, obsize);
 }
 /** @} */
-#endif /* SIO_USE_BUFFERING == TRUE */
 
-#if (SIO_USE_BUFFERING == TRUE) || defined (__DOXYGEN__)
 /**
  * @name        Inline methods of hal_buffered_sio_c
  * @{
@@ -879,7 +870,6 @@ static inline void bsAddFlagsI(void *ip, eventflags_t flags) {
   osalEventBroadcastFlagsI(&self->event, flags);
 }
 /** @} */
-#endif /* SIO_USE_BUFFERING == TRUE */
 
 #endif /* HAL_USE_SIO == TRUE */
 
