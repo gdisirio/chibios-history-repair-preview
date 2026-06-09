@@ -190,7 +190,6 @@
  */
 #define STM32_ST_IRQ_PRIORITY               2
 #define STM32_ST_USE_TIMER                  21
-#define STM32_ST_FREQUENCY_TOLERANCE        0
 
 /*
  * TRNG driver system settings.
