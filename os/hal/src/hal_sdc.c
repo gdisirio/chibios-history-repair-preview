@@ -740,6 +740,7 @@ bool sdcConnect(SDCDriver *sdcp) {
     goto failed;
   }
 
+
   /* Reads extended CSD if needed and possible.*/
   if (SDC_MODE_CARDTYPE_MMC == (sdcp->cardmode & SDC_MODE_CARDTYPE_MASK)) {
 

@@ -1,6 +1,0 @@
-fatfs/
-littlefs/
-lwip/
-wolfssl/
-pico-sdk*/
-*.zip

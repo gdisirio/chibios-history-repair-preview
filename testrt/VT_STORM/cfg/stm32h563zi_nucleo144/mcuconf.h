@@ -189,9 +189,6 @@
 #define STM32_IRQ_I2C3_PRIORITY             5
 #define STM32_IRQ_I2C4_PRIORITY             5
 
-#define STM32_IRQ_SDMMC1_PRIORITY           10
-#define STM32_IRQ_SDMMC2_PRIORITY           10
-
 #define STM32_IRQ_SPI1_PRIORITY             10
 #define STM32_IRQ_SPI2_PRIORITY             10
 #define STM32_IRQ_SPI3_PRIORITY             10
@@ -438,7 +435,6 @@
  */
 #define STM32_ST_IRQ_PRIORITY               8
 #define STM32_ST_USE_TIMER                  2
-#define STM32_ST_FREQUENCY_TOLERANCE        0
 
 /*
  * TRNG driver system settings.
