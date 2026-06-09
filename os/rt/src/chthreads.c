@@ -122,11 +122,6 @@ thread_t *chThdObjectInit(thread_t *tp,
   tp->wabase = (void *)tdp->wbase;
   tp->waend  = (void *)tdp->wend;
 
-  /* Initialization of the port-dependent context fields which must be
-     valid also for thread objects representing already-running execution
-     flows, never going through the full creation path.*/
-  port_setup_context_base(&tp->ctx);
-
   /* Thread-related fields.*/
   tp->hdr.pqueue.prio   = tdp->prio;
   tp->state             = CH_STATE_WTSTART;
@@ -262,16 +257,11 @@ thread_t *chThdSpawnSuspendedI(thread_t *tp,
              (tdp->wend > tdp->wbase) &&
              (((size_t)tdp->wend - (size_t)tdp->wbase) >= THD_STACK_SIZE(0)));
 
-#if CH_CFG_USE_REGISTRY == TRUE
-  chDbgAssert(!chRegIsWorkingAreaInUseI(tdp->wbase),
-              "working area in use");
-#endif
-
   /* Thread object initialization.*/
   tp = chThdObjectInit(tp, tdp);
 
   /* Setting up the port-dependent part of the working area.*/
-  port_setup_context(&tp->ctx, tp->wabase, tp->waend, tdp->funcp, tdp->arg);
+  PORT_SETUP_CONTEXT(tp, tp->wabase, tp->waend, tdp->funcp, tdp->arg);
 
   /* Registry-related fields.*/
 #if CH_CFG_USE_REGISTRY == TRUE
@@ -299,6 +289,11 @@ thread_t *chThdSpawnSuspendedI(thread_t *tp,
  */
 thread_t *chThdSpawnSuspended(thread_t *tp,
                               const thread_descriptor_t *tdp) {
+
+#if CH_CFG_USE_REGISTRY == TRUE
+  chDbgAssert(chRegFindThreadByWorkingArea((void *)tdp->wbase) == NULL,
+              "working area in use");
+#endif
 
   thd_clear(tdp);
 
@@ -346,6 +341,12 @@ thread_t *chThdSpawnRunningI(thread_t *tp, const thread_descriptor_t *tdp) {
  * @iclass
  */
 thread_t *chThdSpawnRunning(thread_t *tp, const thread_descriptor_t *tdp) {
+
+#if (CH_CFG_USE_REGISTRY == TRUE) &&                                        \
+    ((CH_DBG_ENABLE_STACK_CHECK == TRUE) || (CH_CFG_USE_DYNAMIC == TRUE))
+  chDbgAssert(chRegFindThreadByWorkingArea((void *)tdp->wbase) == NULL,
+              "working area in use");
+#endif
 
   thd_clear(tdp);
 
@@ -401,16 +402,11 @@ thread_t *chThdCreateSuspendedI(const thread_descriptor_t *tdp) {
   chDbgCheck(MEM_IS_ALIGNED(stkbase, PORT_WORKING_AREA_ALIGN) &&
              MEM_IS_ALIGNED(stktop, PORT_STACK_ALIGN));
 
-#if CH_CFG_USE_REGISTRY == TRUE
-  chDbgAssert(!chRegIsWorkingAreaInUseI(tdp->wbase),
-              "working area in use");
-#endif
-
   /* The thread object is initialized but not started.*/
   tp = chThdObjectInit(threadref(stktop), tdp);
 
   /* Setting up the port-dependent part of the working area.*/
-  port_setup_context(&tp->ctx, stkbase, tp, tdp->funcp, tdp->arg);
+  PORT_SETUP_CONTEXT(tp, stkbase, tp, tdp->funcp, tdp->arg);
 
 #if CH_CFG_USE_REGISTRY == TRUE
   REG_INSERT(tp->owner, tp);
@@ -438,6 +434,11 @@ thread_t *chThdCreateSuspendedI(const thread_descriptor_t *tdp) {
  */
 thread_t *chThdCreateSuspended(const thread_descriptor_t *tdp) {
   thread_t *tp;
+
+#if CH_CFG_USE_REGISTRY == TRUE
+  chDbgAssert(chRegFindThreadByWorkingArea(tdp->wbase) == NULL,
+              "working area in use");
+#endif
 
 #if CH_DBG_FILL_THREADS == TRUE
   __thd_stackfill((uint8_t *)tdp->wbase, (uint8_t *)tdp->wend);
@@ -489,6 +490,12 @@ thread_t *chThdCreateI(const thread_descriptor_t *tdp) {
 thread_t *chThdCreate(const thread_descriptor_t *tdp) {
   thread_t *tp;
 
+#if (CH_CFG_USE_REGISTRY == TRUE) &&                                        \
+    ((CH_DBG_ENABLE_STACK_CHECK == TRUE) || (CH_CFG_USE_DYNAMIC == TRUE))
+  chDbgAssert(chRegFindThreadByWorkingArea(tdp->wbase) == NULL,
+              "working area in use");
+#endif
+
 #if CH_DBG_FILL_THREADS == TRUE
   __thd_stackfill((uint8_t *)tdp->wbase, (uint8_t *)tdp->wend);
 #endif
@@ -533,6 +540,13 @@ thread_t *chThdCreateStatic(stkline_t *wbase, size_t wsize,
   /* Other checks.*/
   chDbgCheck((prio <= HIGHPRIO) && (func != NULL));
 
+#if CH_CFG_USE_REGISTRY == TRUE
+  /* Special situation where the working area is already in use by an
+     active thread.*/
+  chDbgAssert(chRegFindThreadByWorkingArea(wbase) == NULL,
+              "working area in use");
+#endif
+
   /* Working area end address.*/
   wend = (uint8_t *)wbase + wsize;
 
@@ -551,20 +565,15 @@ thread_t *chThdCreateStatic(stkline_t *wbase, size_t wsize,
 #endif
 
   /* Initializing the thread_t structure using the passed parameters.*/
-  THD_DESC_DECL(desc, "noname", wbase, wend, prio, func, arg, currcore);
+  THD_DESC_DECL(desc, "noname", wbase, wend, prio, func, arg, currcore, NULL);
   tp = chThdObjectInit(threadref(stktop), &desc);
 
   /* Setting up the port-dependent part of the working area.*/
-  port_setup_context(&tp->ctx, wbase, tp, func, arg);
+  PORT_SETUP_CONTEXT(tp, wbase, tp, func, arg);
 
   chSysLock();
 
 #if CH_CFG_USE_REGISTRY == TRUE
-  /* Special situation where the working area is already in use by an
-     active thread.*/
-  chDbgAssert(!chRegIsWorkingAreaInUseI(wbase),
-              "working area in use");
-
   REG_INSERT(tp->owner, tp);
 #endif
 
@@ -843,7 +852,7 @@ void chThdTerminate(thread_t *tp) {
  * @brief   Suspends the invoking thread for the specified time.
  *
  * @param[in] time      the delay in system ticks, the special values are
- *                      handled as follows:
+ *                      handled as follow:
  *                      - @a TIME_INFINITE the thread enters an infinite sleep
  *                        state.
  *                      - @a TIME_IMMEDIATE this value is not allowed.
@@ -928,7 +937,7 @@ void chThdYield(void) {
  *          context.
  *
  * @param[in] trp       a pointer to a thread reference object
- * @return              The wakeup message.
+ * @return              The wake up message.
  *
  * @sclass
  */
@@ -951,13 +960,13 @@ msg_t chThdSuspendS(thread_reference_t *trp) {
  *
  * @param[in] trp       a pointer to a thread reference object
  * @param[in] timeout   the timeout in system ticks, the special values are
- *                      handled as follows:
+ *                      handled as follow:
  *                      - @a TIME_INFINITE the thread enters an infinite sleep
  *                        state.
  *                      - @a TIME_IMMEDIATE the thread is not suspended and
  *                        the function returns @p MSG_TIMEOUT as if a timeout
  *                        occurred.
- * @return              The wakeup message.
+ * @return              The wake up message.
  * @retval MSG_TIMEOUT  if the operation timed out.
  *
  * @sclass
@@ -1085,11 +1094,11 @@ void chThdQueueObjectDispose(threads_queue_t *tqp) {
 /**
  * @brief   Enqueues the caller thread on a threads queue object.
  * @details The caller thread is enqueued and put to sleep until it is
- *          dequeued or the specified timeout expires.
+ *          dequeued or the specified timeouts expires.
  *
  * @param[in] tqp       pointer to a @p threads_queue_t object
  * @param[in] timeout   the timeout in system ticks, the special values are
- *                      handled as follows:
+ *                      handled as follow:
  *                      - @a TIME_INFINITE the thread enters an infinite sleep
  *                        state.
  *                      - @a TIME_IMMEDIATE the thread is not enqueued and

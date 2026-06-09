@@ -205,6 +205,8 @@
 #define STM32_RTC_TAMP_HANDLER              Vector50
 #define STM32_RTC_GLOBAL_NUMBER             2
 #define STM32_RTC_TAMP_NUMBER               4
+#define STM32_RTC_GLOBAL_EXTI               17
+#define STM32_RTC_TAMP_EXTI                 19
 #if !defined(STM32_RTC_GLOBAL_IRQ_PRIORITY) || defined(__DOXYGEN__)
 #define STM32_RTC_GLOBAL_IRQ_PRIORITY       STM32_IRQ_EXTI15_PRIORITY
 #endif
@@ -216,14 +218,17 @@
   nvicEnableVector(STM32_RTC_TAMP_NUMBER, STM32_RTC_TAMP_IRQ_PRIORITY);     \
 } while (false)
 
-/* This device has no RTC-dedicated EXTI lines: the RTC interrupts are
-   connected directly to the NVIC (RM0456 Table 187 - EXTI lines 17/19 are
-   COMP1/VDDUSB, not RTC). The RTC EXTI enable/clear are no-ops.*/
+/* Enabling RTC-related EXTI lines.*/
 #define STM32_RTC_ENABLE_ALL_EXTI() do {                                    \
+  extiEnableGroup1(EXTI_MASK1(STM32_RTC_GLOBAL_EXTI) |                      \
+                   EXTI_MASK1(STM32_RTC_TAMP_EXTI),                         \
+                   EXTI_MODE_RISING_EDGE | EXTI_MODE_ACTION_INTERRUPT);     \
 } while (false)
 
-/* Clearing EXTI interrupts (no RTC EXTI lines, no-op). */
+/* Clearing EXTI interrupts. */
 #define STM32_RTC_CLEAR_ALL_EXTI() do {                                     \
+  extiClearGroup1(EXTI_MASK1(STM32_RTC_GLOBAL_EXTI) |                       \
+                  EXTI_MASK1(STM32_RTC_TAMP_EXTI));                         \
 } while (false)
 
 /* Masks used to preserve state of RTC and TAMP register reserved bits. */
@@ -235,10 +240,10 @@
 #define STM32_TAMP_IER_MASK                 0x003C0007
 
 /*===========================================================================*/
-/* STM32U575xx, STM32U585xx.                                                 */
+/* STM32U575xx.                                                              */
 /*===========================================================================*/
 
-#if defined(STM32U575xx) || defined(STM32U585xx) || defined(__DOXYGEN__)
+#if defined(STM32U575xx) || defined(__DOXYGEN__)
 
 /* ADC attributes.*/
 #define STM32_HAS_ADC1                      TRUE
@@ -280,7 +285,7 @@
 #define STM32_HAS_GPIOF                     TRUE
 #define STM32_HAS_GPIOG                     TRUE
 #define STM32_HAS_GPIOH                     TRUE
-#define STM32_HAS_GPIOI                     TRUE
+#define STM32_HAS_GPIOI                     FALSE
 #define STM32_HAS_GPIOJ                     FALSE
 #define STM32_HAS_GPIOK                     FALSE
 #define STM32_GPIO_EN_MASK                  (RCC_AHB2ENR1_GPIOAEN |         \
@@ -290,8 +295,7 @@
                                              RCC_AHB2ENR1_GPIOEEN |         \
                                              RCC_AHB2ENR1_GPIOFEN |         \
                                              RCC_AHB2ENR1_GPIOGEN |         \
-                                             RCC_AHB2ENR1_GPIOHEN |         \
-                                             RCC_AHB2ENR1_GPIOIEN)
+                                             RCC_AHB2ENR1_GPIOHEN)
 
 /* I2C attributes.*/
 #define STM32_I2C_SINGLE_IRQ                FALSE
@@ -434,7 +438,7 @@
 /* DCMI attributes.*/
 #define STM32_HAS_DCMI                      TRUE
 
-#endif /* defined(STM32U575xx) || defined(STM32U585xx) */
+#endif /* defined(STM32U575xx) */
 
 /** @} */
 
