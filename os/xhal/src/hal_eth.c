@@ -191,7 +191,7 @@ const void *__eth_selcfg_impl(void *ip, unsigned cfgnum) {
 /** @} */
 
 /**
- * @brief       VMT structure of network driver class.
+ * @brief       VMT structure of ETH driver class.
  * @note        It is public because accessed by the inlined constructor.
  */
 const struct hal_eth_driver_vmt __hal_eth_driver_vmt = {
@@ -209,17 +209,15 @@ const struct hal_eth_driver_vmt __hal_eth_driver_vmt = {
  */
 /**
  * @brief       Returns the link status.
- * @note        Lock-free (an MDIO poll), takes no OS lock and never
- *              deschedules, so it is callable from any context.
  *
  * @param[in,out] ip            Pointer to a @p hal_eth_driver_c instance.
  * @return                      The link status,
  * @retval true                 If the link is active.
  * @retval false                If the link is down or the driver is not ready.
  *
- * @xclass
+ * @api
  */
-bool ethPollLinkStatusX(void *ip) {
+bool ethPollLinkStatus(void *ip) {
   hal_eth_driver_c *self = (hal_eth_driver_c *)ip;
 
   if (drvGetStateX(self) == HAL_DRV_STATE_READY) {

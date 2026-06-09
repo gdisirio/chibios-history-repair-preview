@@ -97,7 +97,11 @@ ROMCONST chdebug_t ch_debug = {
 #endif
   .off_state                = (uint8_t)__CH_OFFSETOF(thread_t, state),
   .off_flags                = (uint8_t)__CH_OFFSETOF(thread_t, flags),
+#if CH_CFG_USE_DYNAMIC == TRUE
   .off_refs                 = (uint8_t)__CH_OFFSETOF(thread_t, refs),
+#else
+  .off_refs                 = (uint8_t)0,
+#endif
 #if CH_CFG_TIME_QUANTUM > 0
   .off_preempt              = (uint8_t)__CH_OFFSETOF(thread_t, ticks),
 #else
@@ -158,9 +162,9 @@ thread_t *chRegFirstThread(void) {
   chSysLock();
   p = (uint8_t *)REG_HEADER(currcore)->next;
   tp = __CH_OWNEROF(p, thread_t, rqueue);
-  chDbgAssert(tp->refs < (trefs_t)255, "too many references");
-
+#if CH_CFG_USE_DYNAMIC == TRUE
   tp->refs++;
+#endif
   chSysUnlock();
 
   return tp;
@@ -192,12 +196,16 @@ thread_t *chRegNextThread(thread_t *tp) {
     uint8_t *p = (uint8_t *)nqp;
     ntp = __CH_OWNEROF(p, thread_t, rqueue);
 
+#if CH_CFG_USE_DYNAMIC == TRUE
     chDbgAssert(ntp->refs < (trefs_t)255, "too many references");
 
     ntp->refs++;
+#endif
   }
   chSysUnlock();
+#if CH_CFG_USE_DYNAMIC == TRUE
   chThdRelease(tp);
+#endif
 
   return ntp;
 }
@@ -281,35 +289,6 @@ thread_t *chRegFindThreadByWorkingArea(stkline_t *wa) {
   } while (ctp != NULL);
 
   return NULL;
-}
-
-/**
- * @brief   Confirms that a working area is being used by some active thread.
- *
- * @param[in] wa        pointer to a static working area
- * @retval true         if a matching thread has been found.
- * @retval false        if a matching thread has not been found.
- *
- * @iclass
- */
-bool chRegIsWorkingAreaInUseI(stkline_t *wa) {
-  ch_queue_t *tqp;
-
-  chDbgCheckClassI();
-
-  /* Scanning registry.*/
-  tqp = REG_HEADER(currcore)->next;
-  while (tqp != REG_HEADER(currcore)) {
-    thread_t *ctp = __CH_OWNEROF((uint8_t *)tqp, thread_t, rqueue);
-
-    if (chThdGetWorkingAreaX(ctp) == wa) {
-      return true;
-    }
-
-    tqp = tqp->next;
-  }
-
-  return false;
 }
 
 #endif /* CH_CFG_USE_REGISTRY == TRUE */
