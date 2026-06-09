@@ -287,11 +287,6 @@ void chSysInit(void) {
   nil.next = nil.current = &nil.threads[CH_CFG_MAX_THREADS];
   nil.current->state = NIL_STATE_READY;
 
-  /* Initialization of the port-dependent context fields which must be
-     valid also for the thread object representing this already-running
-     execution flow, never going through the full creation path.*/
-  port_setup_context_base(&nil.current->ctx);
-
 #if CH_DBG_ENABLE_STACK_CHECK == TRUE
   /* The idle thread is a special case because its stack is set up by the
      runtime environment.*/
@@ -658,7 +653,7 @@ void chSchRescheduleS(void) {
  *          awakened with a @p MSG_TIMEOUT low level message.
  *
  * @param[in] newstate  the new thread state or a semaphore pointer
- * @param[in] timeout   the number of ticks before the operation times out.
+ * @param[in] timeout   the number of ticks before the operation timeouts.
  *                      the following special values are allowed:
  *                      - @a TIME_INFINITE no timeout.
  * @return              The wakeup message.
@@ -789,7 +784,7 @@ thread_t *chThdCreateI(const thread_descriptor_t *tdp) {
 #endif
 
   /* Port dependent thread initialization.*/
-  port_setup_context(&tp->ctx, tdp->wbase, tdp->wend, tdp->funcp, tdp->arg);
+  PORT_SETUP_CONTEXT(tp, tdp->wbase, tdp->wend, tdp->funcp, tdp->arg);
 
   /* Initialization hook.*/
   CH_CFG_THREAD_EXT_INIT_HOOK(tp);
@@ -895,11 +890,11 @@ msg_t chThdWait(thread_t *tp) {
  *          context.
  *
  * @param[in] trp       a pointer to a thread reference object
- * @param[in] timeout   the number of ticks before the operation times out,
+ * @param[in] timeout   the number of ticks before the operation timeouts,
  *                      the following special values are allowed:
  *                      - @a TIME_IMMEDIATE immediate timeout.
  *                      - @a TIME_INFINITE no timeout.
- * @return              The wakeup message.
+ * @return              The wake up message.
  *
  * @sclass
  */
@@ -1006,11 +1001,11 @@ void chThdSleepUntil(systime_t abstime) {
 /**
  * @brief   Enqueues the caller thread on a threads queue object.
  * @details The caller thread is enqueued and put to sleep until it is
- *          dequeued or the specified timeout expires.
+ *          dequeued or the specified timeouts expires.
  *
  * @param[in] tqp       pointer to a @p threads_queue_t structure
  * @param[in] timeout   the timeout in system ticks, the special values are
- *                      handled as follows:
+ *                      handled as follow:
  *                      - @a TIME_IMMEDIATE immediate timeout.
  *                      - @a TIME_INFINITE no timeout.
  * @return              The message from @p osalQueueWakeupOneI() or
