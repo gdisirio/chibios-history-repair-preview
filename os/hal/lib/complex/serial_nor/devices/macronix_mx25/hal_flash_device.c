@@ -435,6 +435,7 @@ flash_error_t snor_device_read(SNORDriver *devp, flash_offset_t offset,
   return FLASH_NO_ERROR;
 }
 
+
 /**
  * @brief   Device program.
  *
@@ -511,6 +512,7 @@ flash_error_t snor_device_start_erase_all(SNORDriver *devp) {
 
   return FLASH_NO_ERROR;
 }
+
 
 /**
  * @brief   Device sector erase start.
