@@ -1,3 +1,4 @@
-PLATFORMSRC += $(CHIBIOS)/os/xhal/ports/STM32/LLD/SYSTICKv1/hal_st_lld.c
+PLATFORMSRC += $(CHIBIOS)/os/hal/ports/STM32/LLD/SYSTICKv1/hal_st_lld.c
 
-PLATFORMINC += $(CHIBIOS)/os/xhal/ports/STM32/LLD/SYSTICKv1
+PLATFORMINC += $(CHIBIOS)/os/hal/ports/STM32/LLD/SYSTICKv1
+
