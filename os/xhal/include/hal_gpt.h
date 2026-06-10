@@ -272,7 +272,7 @@ extern "C" {
   void gptStartOneShot(void *ip, gptcnt_t interval);
   void gptStopTimerI(void *ip);
   void gptStopTimer(void *ip);
-  void gptPolledDelayX(void *ip, gptcnt_t interval);
+  void gptPolledDelay(void *ip, gptcnt_t interval);
   /* Regular functions.*/
   void gptInit(void);
 #ifdef __cplusplus
