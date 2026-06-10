@@ -227,14 +227,12 @@ osalSysLock();
 gptStopTimerI(self);
 osalSysUnlock();]]></implementation>
             </method>
-            <method name="gptPolledDelayX" ctype="void">
+            <method name="gptPolledDelay" ctype="void">
               <brief>Starts the timer in one-shot mode and waits for completion.</brief>
-              <note>This is a busy-wait that does not take the OS lock nor
-                deschedule, so it is safe to call from any context.</note>
               <param name="interval" ctype="gptcnt_t" dir="in">
                 Time interval in ticks.
               </param>
-              <xclass />
+              <api />
               <implementation><![CDATA[
 osalDbgCheck(self != NULL);
 osalDbgAssert(self->state == HAL_DRV_STATE_READY, "not ready");

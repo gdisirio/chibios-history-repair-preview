@@ -77,7 +77,6 @@
 
 /* I2C attributes.*/
 #define STM32_I2C4_USE_BDMA                 TRUE
-#define STM32_I2C_SINGLE_IRQ                FALSE
 
 /* RTC attributes.*/
 #define STM32_HAS_RTC                       TRUE

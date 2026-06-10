@@ -38,24 +38,33 @@
 #define CLK_HSE                 3U
 #define CLK_MSIS                4U
 #define CLK_MSIK                5U
-#define CLK_PLL1P               6U
-#define CLK_PLL1Q               7U
-#define CLK_PLL1R               8U
-#define CLK_PLL2P               9U
-#define CLK_PLL2Q               10U
-#define CLK_PLL2R               11U
-#define CLK_PLL3P               12U
-#define CLK_PLL3Q               13U
-#define CLK_PLL3R               14U
-#define CLK_SYSCLK              15U
-#define CLK_HCLK                16U
-#define CLK_PCLK1               17U
-#define CLK_PCLK1TIM            18U
-#define CLK_PCLK2               19U
-#define CLK_PCLK2TIM            20U
-#define CLK_PCLK3               21U
-#define CLK_MCO                 22U
-#define CLK_ARRAY_SIZE          23U
+#define CLK_PLL1IN              6U
+#define CLK_PLL1REF             7U
+#define CLK_PLL1VCO             8U
+#define CLK_PLL1P               9U
+#define CLK_PLL1Q               10U
+#define CLK_PLL1R               11U
+#define CLK_PLL2IN              12U
+#define CLK_PLL2REF             13U
+#define CLK_PLL2VCO             14U
+#define CLK_PLL2P               15U
+#define CLK_PLL2Q               16U
+#define CLK_PLL2R               17U
+#define CLK_PLL3IN              18U
+#define CLK_PLL3REF             19U
+#define CLK_PLL3VCO             20U
+#define CLK_PLL3P               21U
+#define CLK_PLL3Q               22U
+#define CLK_PLL3R               23U
+#define CLK_SYSCLK              24U
+#define CLK_HCLK                25U
+#define CLK_PCLK1               26U
+#define CLK_PCLK1TIM            27U
+#define CLK_PCLK2               28U
+#define CLK_PCLK2TIM            29U
+#define CLK_PCLK3               30U
+#define CLK_MCO                 31U
+#define CLK_ARRAY_SIZE          32U
 
 #define CLK_POINT_NAMES                                                     \
   {                                                                         \
@@ -65,12 +74,21 @@
     "HSE",                                                                  \
     "MSIS",                                                                 \
     "MSIK",                                                                 \
+    "PLL1IN",                                                               \
+    "PLL1REF",                                                              \
+    "PLL1VCO",                                                              \
     "PLL1P",                                                                \
     "PLL1Q",                                                                \
     "PLL1R",                                                                \
+    "PLL2IN",                                                               \
+    "PLL2REF",                                                              \
+    "PLL2VCO",                                                              \
     "PLL2P",                                                                \
     "PLL2Q",                                                                \
     "PLL2R",                                                                \
+    "PLL3IN",                                                               \
+    "PLL3REF",                                                              \
+    "PLL3VCO",                                                              \
     "PLL3P",                                                                \
     "PLL3Q",                                                                \
     "PLL3R",                                                                \
@@ -139,12 +157,6 @@
 #define RCC_BDCR_LSCOSEL_NOCLOCK            0U
 #define RCC_BDCR_LSCOSEL_LSI                RCC_BDCR_LSCOEN
 #define RCC_BDCR_LSCOSEL_LSE                (RCC_BDCR_LSCOEN | RCC_BDCR_LSCOSEL)
-#define RCC_PLL1CFGR_PLL1RGE_4TO8           (2U << RCC_PLL1CFGR_PLL1RGE_Pos)
-#define RCC_PLL1CFGR_PLL1RGE_8TO16          (3U << RCC_PLL1CFGR_PLL1RGE_Pos)
-#define RCC_PLL2CFGR_PLL2RGE_4TO8           (2U << RCC_PLL2CFGR_PLL2RGE_Pos)
-#define RCC_PLL2CFGR_PLL2RGE_8TO16          (3U << RCC_PLL2CFGR_PLL2RGE_Pos)
-#define RCC_PLL3CFGR_PLL3RGE_4TO8           (2U << RCC_PLL3CFGR_PLL3RGE_Pos)
-#define RCC_PLL3CFGR_PLL3RGE_8TO16          (3U << RCC_PLL3CFGR_PLL3RGE_Pos)
 /** @} */
 
 /**
@@ -179,7 +191,7 @@
 #define RCC_CFGR1_SW_MSIS                   ((0U) << 0U)
 #define RCC_CFGR1_SW_HSI16                  ((1U) << 0U)
 #define RCC_CFGR1_SW_HSE                    ((2U) << 0U)
-#define RCC_CFGR1_SW_PLL1R                  ((3U) << 0U)
+#define RCC_CFGR1_SW_PLL1P                  ((3U) << 0U)
 
 #define RCC_CFGR1_MCOSEL_NOCLOCK            ((0U) << 24U)
 #define RCC_CFGR1_MCOSEL_SYSCLK             ((1U) << 24U)
@@ -437,14 +449,14 @@
  * @brief   Selects the MSIS frequency range.
  */
 #if !defined(STM32_CFG_MSIS_RANGE) || defined(__DOXYGEN__)
-  #define STM32_CFG_MSIS_RANGE              RCC_ICSCR1_MSISRANGE_RANGE0_48M
+  #define STM32_CFG_MSIS_RANGE              RCC_ICSCR1_MSISRANGE_RANGE4_4M
 #endif
 
 /**
  * @brief   Selects the MSIK frequency range.
  */
 #if !defined(STM32_CFG_MSIK_RANGE) || defined(__DOXYGEN__)
-  #define STM32_CFG_MSIK_RANGE              RCC_ICSCR1_MSIKRANGE_RANGE0_48M
+  #define STM32_CFG_MSIK_RANGE              RCC_ICSCR1_MSIKRANGE_RANGE4_4M
 #endif
 
 /**
@@ -591,7 +603,7 @@
  * @brief   Enables the HSI48 clock source.
  */
 #if !defined(STM32_CFG_HSI48_ENABLE) || defined(__DOXYGEN__)
-  #define STM32_CFG_HSI48_ENABLE            TRUE
+  #define STM32_CFG_HSI48_ENABLE            FALSE
 #endif
 
 /**
@@ -638,35 +650,35 @@
  * @brief   Configures the PLL1REF clock divider value.
  */
 #if !defined(STM32_CFG_PLL1REF_VALUE) || defined(__DOXYGEN__)
-  #define STM32_CFG_PLL1REF_VALUE           3
+  #define STM32_CFG_PLL1REF_VALUE           1
 #endif
 
 /**
  * @brief   Configures the PLL1VCO clock multiplier value.
  */
 #if !defined(STM32_CFG_PLL1VCO_VALUE) || defined(__DOXYGEN__)
-  #define STM32_CFG_PLL1VCO_VALUE           10
+  #define STM32_CFG_PLL1VCO_VALUE           32
 #endif
 
 /**
  * @brief   Configures the PLL1P clock divider value.
  */
 #if !defined(STM32_CFG_PLL1P_VALUE) || defined(__DOXYGEN__)
-  #define STM32_CFG_PLL1P_VALUE             1
+  #define STM32_CFG_PLL1P_VALUE             4
 #endif
 
 /**
  * @brief   Configures the PLL1Q clock divider value.
  */
 #if !defined(STM32_CFG_PLL1Q_VALUE) || defined(__DOXYGEN__)
-  #define STM32_CFG_PLL1Q_VALUE             1
+  #define STM32_CFG_PLL1Q_VALUE             4
 #endif
 
 /**
  * @brief   Configures the PLL1R clock divider value.
  */
 #if !defined(STM32_CFG_PLL1R_VALUE) || defined(__DOXYGEN__)
-  #define STM32_CFG_PLL1R_VALUE             1
+  #define STM32_CFG_PLL1R_VALUE             4
 #endif
 
 /**
@@ -769,10 +781,10 @@
  *          - MSIS.
  *          - HSI16.
  *          - HSE.
- *          - PLL1R.
+ *          - PLL1P.
  */
 #if !defined(STM32_CFG_SYSCLK_SEL) || defined(__DOXYGEN__)
-  #define STM32_CFG_SYSCLK_SEL              RCC_CFGR1_SW_PLL1R
+  #define STM32_CFG_SYSCLK_SEL              RCC_CFGR1_SW_MSIS
 #endif
 
 /**
@@ -1051,7 +1063,7 @@
  *          - PLL1P.
  */
 #if !defined(STM32_CFG_SDMMC_SEL) || defined(__DOXYGEN__)
-  #define STM32_CFG_SDMMC_SEL               RCC_CCIPR2_SDMMCSEL_PLL1P
+  #define STM32_CFG_SDMMC_SEL               RCC_CCIPR2_SDMMCSEL_ICLK
 #endif
 
 /**
@@ -1438,7 +1450,6 @@
 #define STM32_VOS1_ADCCLK_MAX               55000000
 #define STM32_VOS1_USBCLK_MIN               47880000
 #define STM32_VOS1_USBCLK_MAX               48120000
-#define STM32_VOS1_SDMMCCLK_MAX             208000000
 #if ((STM32_FLASH_ACR & FLASH_ACR_LPM) == 0) || \
     defined(__DOXYGEN__)
 #define STM32_VOS1_FLASH_0WS_MAX            32000000
@@ -1575,7 +1586,6 @@
 #define STM32_VOS2_ADCCLK_MAX               55000000
 #define STM32_VOS2_USBCLK_MIN               47880000
 #define STM32_VOS2_USBCLK_MAX               48120000
-#define STM32_VOS2_SDMMCCLK_MAX             208000000
 #if ((STM32_FLASH_ACR & FLASH_ACR_LPM) == 0) || \
     defined(__DOXYGEN__)
 #define STM32_VOS2_FLASH_0WS_MAX            30000000
@@ -1712,7 +1722,6 @@
 #define STM32_VOS3_ADCCLK_MAX               55000000
 #define STM32_VOS3_USBCLK_MIN               47880000
 #define STM32_VOS3_USBCLK_MAX               48120000
-#define STM32_VOS3_SDMMCCLK_MAX             208000000
 #if ((STM32_FLASH_ACR & FLASH_ACR_LPM) == 0) || \
     defined(__DOXYGEN__)
 #define STM32_VOS3_FLASH_0WS_MAX            24000000
@@ -1849,7 +1858,6 @@
 #define STM32_VOS4_ADCCLK_MAX               25000000
 #define STM32_VOS4_USBCLK_MIN               47880000
 #define STM32_VOS4_USBCLK_MAX               48120000
-#define STM32_VOS4_SDMMCCLK_MAX             208000000
 #if ((STM32_FLASH_ACR & FLASH_ACR_LPM) == 0) || \
     defined(__DOXYGEN__)
 #define STM32_VOS4_FLASH_0WS_MAX            12000000
@@ -1975,7 +1983,6 @@
 #define STM32_ADCCLK_MAX                    STM32_VOS1_ADCCLK_MAX
 #define STM32_USBCLK_MIN                    STM32_VOS1_USBCLK_MIN
 #define STM32_USBCLK_MAX                    STM32_VOS1_USBCLK_MAX
-#define STM32_SDMMCCLK_MAX                  STM32_VOS1_SDMMCCLK_MAX
 #define STM32_FLASH_0WS_MAX                 STM32_VOS1_FLASH_0WS_MAX
 #define STM32_FLASH_1WS_MAX                 STM32_VOS1_FLASH_1WS_MAX
 #define STM32_FLASH_2WS_MAX                 STM32_VOS1_FLASH_2WS_MAX
@@ -2015,7 +2022,6 @@
 #define STM32_ADCCLK_MAX                    STM32_VOS2_ADCCLK_MAX
 #define STM32_USBCLK_MIN                    STM32_VOS2_USBCLK_MIN
 #define STM32_USBCLK_MAX                    STM32_VOS2_USBCLK_MAX
-#define STM32_SDMMCCLK_MAX                  STM32_VOS2_SDMMCCLK_MAX
 #define STM32_FLASH_0WS_MAX                 STM32_VOS2_FLASH_0WS_MAX
 #define STM32_FLASH_1WS_MAX                 STM32_VOS2_FLASH_1WS_MAX
 #define STM32_FLASH_2WS_MAX                 STM32_VOS2_FLASH_2WS_MAX
@@ -2055,7 +2061,6 @@
 #define STM32_ADCCLK_MAX                    STM32_VOS3_ADCCLK_MAX
 #define STM32_USBCLK_MIN                    STM32_VOS3_USBCLK_MIN
 #define STM32_USBCLK_MAX                    STM32_VOS3_USBCLK_MAX
-#define STM32_SDMMCCLK_MAX                  STM32_VOS3_SDMMCCLK_MAX
 #define STM32_FLASH_0WS_MAX                 STM32_VOS3_FLASH_0WS_MAX
 #define STM32_FLASH_1WS_MAX                 STM32_VOS3_FLASH_1WS_MAX
 #define STM32_FLASH_2WS_MAX                 STM32_VOS3_FLASH_2WS_MAX
@@ -2095,7 +2100,6 @@
 #define STM32_ADCCLK_MAX                    STM32_VOS4_ADCCLK_MAX
 #define STM32_USBCLK_MIN                    STM32_VOS4_USBCLK_MIN
 #define STM32_USBCLK_MAX                    STM32_VOS4_USBCLK_MAX
-#define STM32_SDMMCCLK_MAX                  STM32_VOS4_SDMMCCLK_MAX
 #define STM32_FLASH_0WS_MAX                 STM32_VOS4_FLASH_0WS_MAX
 #define STM32_FLASH_1WS_MAX                 STM32_VOS4_FLASH_1WS_MAX
 #define STM32_FLASH_2WS_MAX                 STM32_VOS4_FLASH_2WS_MAX
@@ -2768,6 +2772,8 @@
  * @brief   PLL1P clock derived enable state.
  */
 #define STM32_PLL1P_ENABLED                 ((STM32_PLL1P_REQUIRED_DEMANDED == TRUE) || \
+                                             ((STM32_SYSCLK_ENABLED == TRUE) && \
+                                              (STM32_CFG_SYSCLK_SEL == RCC_CFGR1_SW_PLL1P)) || \
                                              ((STM32_SDMMC_ENABLED == TRUE) && \
                                               (STM32_CFG_SDMMC_SEL == RCC_CCIPR2_SDMMCSEL_PLL1P)) || \
                                              ((STM32_SAI1_ENABLED == TRUE) && \
@@ -2794,8 +2800,6 @@
  * @brief   PLL1R clock derived enable state.
  */
 #define STM32_PLL1R_ENABLED                 ((STM32_PLL1R_REQUIRED_DEMANDED == TRUE) || \
-                                             ((STM32_SYSCLK_ENABLED == TRUE) && \
-                                              (STM32_CFG_SYSCLK_SEL == RCC_CFGR1_SW_PLL1R)) || \
                                              ((STM32_MCODIV_ENABLED == TRUE) && \
                                               (STM32_CFG_MCODIV_SEL == RCC_CFGR1_MCOSEL_PLL1R)))
 
@@ -4104,23 +4108,19 @@
      (STM32_CFG_PLL1IN_SEL == RCC_PLL1CFGR_PLL1SRC_NOCLOCK)) || \
     defined(__DOXYGEN__)
   #define STM32_PLL1IN_FREQ                 STM32_NONE_FREQ
-  #define STM32_PLL1IN_CLOCK                STM32_NONE_CLOCK
 #elif (STM32_PLL1IN_ENABLED == TRUE) && \
       (STM32_CFG_PLL1IN_SEL == RCC_PLL1CFGR_PLL1SRC_MSIS)
   #define STM32_PLL1IN_FREQ                 STM32_MSIS_FREQ
-  #define STM32_PLL1IN_CLOCK                STM32_MSIS_CLOCK
 #elif (STM32_PLL1IN_ENABLED == TRUE) && \
       (STM32_CFG_PLL1IN_SEL == RCC_PLL1CFGR_PLL1SRC_HSI16)
   #define STM32_PLL1IN_FREQ                 STM32_HSI16_FREQ
-  #define STM32_PLL1IN_CLOCK                STM32_HSI16_CLOCK
 #elif (STM32_PLL1IN_ENABLED == TRUE) && \
       (STM32_CFG_PLL1IN_SEL == RCC_PLL1CFGR_PLL1SRC_HSE)
   #define STM32_PLL1IN_FREQ                 STM32_HSE_FREQ
-  #define STM32_PLL1IN_CLOCK                STM32_HSE_CLOCK
 #else
   #define STM32_PLL1IN_FREQ                 0U
-  #define STM32_PLL1IN_CLOCK                0U
 #endif
+#define STM32_PLL1IN_CLOCK                  hal_lld_get_clock_point(CLK_PLL1IN)
 
 /* --- Macros and checks for the PLL1REF clock point. ----------------------*/
 
@@ -4145,12 +4145,10 @@
 #if (STM32_PLL1REF_ENABLED == TRUE) || defined(__DOXYGEN__)
   #define STM32_PLL1REF_FREQ                (STM32_PLL1IN_FREQ /            \
                                              STM32_CFG_PLL1REF_VALUE)
-  #define STM32_PLL1REF_CLOCK               (STM32_PLL1IN_CLOCK /           \
-                                             STM32_CFG_PLL1REF_VALUE)
 #else
   #define STM32_PLL1REF_FREQ                0U
-  #define STM32_PLL1REF_CLOCK               0U
 #endif
+#define STM32_PLL1REF_CLOCK                 hal_lld_get_clock_point(CLK_PLL1REF)
 
 #if !((STM32_PLL1REF_ENABLED != TRUE) ||                                    \
      (STM32_PLL1REF_FREQ >= STM32_PLLIN_MIN)) && !defined(__DOXYGEN__)
@@ -4185,12 +4183,10 @@
 #if (STM32_PLL1VCO_ENABLED == TRUE) || defined(__DOXYGEN__)
   #define STM32_PLL1VCO_FREQ                (STM32_PLL1REF_FREQ *           \
                                              STM32_CFG_PLL1VCO_VALUE)
-  #define STM32_PLL1VCO_CLOCK               (STM32_PLL1REF_CLOCK *          \
-                                             STM32_CFG_PLL1VCO_VALUE)
 #else
   #define STM32_PLL1VCO_FREQ                0U
-  #define STM32_PLL1VCO_CLOCK               0U
 #endif
+#define STM32_PLL1VCO_CLOCK                 hal_lld_get_clock_point(CLK_PLL1VCO)
 
 #if !((STM32_PLL1VCO_ENABLED != TRUE) ||                                    \
      (STM32_PLL1VCO_FREQ >= STM32_PLLVCO_MIN)) && !defined(__DOXYGEN__)
@@ -4390,23 +4386,19 @@
      (STM32_CFG_PLL2IN_SEL == RCC_PLL2CFGR_PLL2SRC_NOCLOCK)) || \
     defined(__DOXYGEN__)
   #define STM32_PLL2IN_FREQ                 STM32_NONE_FREQ
-  #define STM32_PLL2IN_CLOCK                STM32_NONE_CLOCK
 #elif (STM32_PLL2IN_ENABLED == TRUE) && \
       (STM32_CFG_PLL2IN_SEL == RCC_PLL2CFGR_PLL2SRC_MSIS)
   #define STM32_PLL2IN_FREQ                 STM32_MSIS_FREQ
-  #define STM32_PLL2IN_CLOCK                STM32_MSIS_CLOCK
 #elif (STM32_PLL2IN_ENABLED == TRUE) && \
       (STM32_CFG_PLL2IN_SEL == RCC_PLL2CFGR_PLL2SRC_HSI16)
   #define STM32_PLL2IN_FREQ                 STM32_HSI16_FREQ
-  #define STM32_PLL2IN_CLOCK                STM32_HSI16_CLOCK
 #elif (STM32_PLL2IN_ENABLED == TRUE) && \
       (STM32_CFG_PLL2IN_SEL == RCC_PLL2CFGR_PLL2SRC_HSE)
   #define STM32_PLL2IN_FREQ                 STM32_HSE_FREQ
-  #define STM32_PLL2IN_CLOCK                STM32_HSE_CLOCK
 #else
   #define STM32_PLL2IN_FREQ                 0U
-  #define STM32_PLL2IN_CLOCK                0U
 #endif
+#define STM32_PLL2IN_CLOCK                  hal_lld_get_clock_point(CLK_PLL2IN)
 
 /* --- Macros and checks for the PLL2REF clock point. ----------------------*/
 
@@ -4431,12 +4423,10 @@
 #if (STM32_PLL2REF_ENABLED == TRUE) || defined(__DOXYGEN__)
   #define STM32_PLL2REF_FREQ                (STM32_PLL2IN_FREQ /            \
                                              STM32_CFG_PLL2REF_VALUE)
-  #define STM32_PLL2REF_CLOCK               (STM32_PLL2IN_CLOCK /           \
-                                             STM32_CFG_PLL2REF_VALUE)
 #else
   #define STM32_PLL2REF_FREQ                0U
-  #define STM32_PLL2REF_CLOCK               0U
 #endif
+#define STM32_PLL2REF_CLOCK                 hal_lld_get_clock_point(CLK_PLL2REF)
 
 #if !((STM32_PLL2REF_ENABLED != TRUE) ||                                    \
      (STM32_PLL2REF_FREQ >= STM32_PLLIN_MIN)) && !defined(__DOXYGEN__)
@@ -4471,12 +4461,10 @@
 #if (STM32_PLL2VCO_ENABLED == TRUE) || defined(__DOXYGEN__)
   #define STM32_PLL2VCO_FREQ                (STM32_PLL2REF_FREQ *           \
                                              STM32_CFG_PLL2VCO_VALUE)
-  #define STM32_PLL2VCO_CLOCK               (STM32_PLL2REF_CLOCK *          \
-                                             STM32_CFG_PLL2VCO_VALUE)
 #else
   #define STM32_PLL2VCO_FREQ                0U
-  #define STM32_PLL2VCO_CLOCK               0U
 #endif
+#define STM32_PLL2VCO_CLOCK                 hal_lld_get_clock_point(CLK_PLL2VCO)
 
 #if !((STM32_PLL2VCO_ENABLED != TRUE) ||                                    \
      (STM32_PLL2VCO_FREQ >= STM32_PLLVCO_MIN)) && !defined(__DOXYGEN__)
@@ -4645,23 +4633,19 @@
      (STM32_CFG_PLL3IN_SEL == RCC_PLL3CFGR_PLL3SRC_NOCLOCK)) || \
     defined(__DOXYGEN__)
   #define STM32_PLL3IN_FREQ                 STM32_NONE_FREQ
-  #define STM32_PLL3IN_CLOCK                STM32_NONE_CLOCK
 #elif (STM32_PLL3IN_ENABLED == TRUE) && \
       (STM32_CFG_PLL3IN_SEL == RCC_PLL3CFGR_PLL3SRC_MSIS)
   #define STM32_PLL3IN_FREQ                 STM32_MSIS_FREQ
-  #define STM32_PLL3IN_CLOCK                STM32_MSIS_CLOCK
 #elif (STM32_PLL3IN_ENABLED == TRUE) && \
       (STM32_CFG_PLL3IN_SEL == RCC_PLL3CFGR_PLL3SRC_HSI16)
   #define STM32_PLL3IN_FREQ                 STM32_HSI16_FREQ
-  #define STM32_PLL3IN_CLOCK                STM32_HSI16_CLOCK
 #elif (STM32_PLL3IN_ENABLED == TRUE) && \
       (STM32_CFG_PLL3IN_SEL == RCC_PLL3CFGR_PLL3SRC_HSE)
   #define STM32_PLL3IN_FREQ                 STM32_HSE_FREQ
-  #define STM32_PLL3IN_CLOCK                STM32_HSE_CLOCK
 #else
   #define STM32_PLL3IN_FREQ                 0U
-  #define STM32_PLL3IN_CLOCK                0U
 #endif
+#define STM32_PLL3IN_CLOCK                  hal_lld_get_clock_point(CLK_PLL3IN)
 
 /* --- Macros and checks for the PLL3REF clock point. ----------------------*/
 
@@ -4686,12 +4670,10 @@
 #if (STM32_PLL3REF_ENABLED == TRUE) || defined(__DOXYGEN__)
   #define STM32_PLL3REF_FREQ                (STM32_PLL3IN_FREQ /            \
                                              STM32_CFG_PLL3REF_VALUE)
-  #define STM32_PLL3REF_CLOCK               (STM32_PLL3IN_CLOCK /           \
-                                             STM32_CFG_PLL3REF_VALUE)
 #else
   #define STM32_PLL3REF_FREQ                0U
-  #define STM32_PLL3REF_CLOCK               0U
 #endif
+#define STM32_PLL3REF_CLOCK                 hal_lld_get_clock_point(CLK_PLL3REF)
 
 #if !((STM32_PLL3REF_ENABLED != TRUE) ||                                    \
      (STM32_PLL3REF_FREQ >= STM32_PLLIN_MIN)) && !defined(__DOXYGEN__)
@@ -4726,12 +4708,10 @@
 #if (STM32_PLL3VCO_ENABLED == TRUE) || defined(__DOXYGEN__)
   #define STM32_PLL3VCO_FREQ                (STM32_PLL3REF_FREQ *           \
                                              STM32_CFG_PLL3VCO_VALUE)
-  #define STM32_PLL3VCO_CLOCK               (STM32_PLL3REF_CLOCK *          \
-                                             STM32_CFG_PLL3VCO_VALUE)
 #else
   #define STM32_PLL3VCO_FREQ                0U
-  #define STM32_PLL3VCO_CLOCK               0U
 #endif
+#define STM32_PLL3VCO_CLOCK                 hal_lld_get_clock_point(CLK_PLL3VCO)
 
 #if !((STM32_PLL3VCO_ENABLED != TRUE) ||                                    \
      (STM32_PLL3VCO_FREQ >= STM32_PLLVCO_MIN)) && !defined(__DOXYGEN__)
@@ -4868,8 +4848,8 @@
   #define STM32_SYSCLK_BITS                 RCC_CFGR1_SW_HSI16
 #elif (STM32_CFG_SYSCLK_SEL == RCC_CFGR1_SW_HSE)
   #define STM32_SYSCLK_BITS                 RCC_CFGR1_SW_HSE
-#elif (STM32_CFG_SYSCLK_SEL == RCC_CFGR1_SW_PLL1R)
-  #define STM32_SYSCLK_BITS                 RCC_CFGR1_SW_PLL1R
+#elif (STM32_CFG_SYSCLK_SEL == RCC_CFGR1_SW_PLL1P)
+  #define STM32_SYSCLK_BITS                 RCC_CFGR1_SW_PLL1P
 #else
   #error "invalid STM32_CFG_SYSCLK_SEL value specified"
 #endif
@@ -4888,8 +4868,8 @@
       (STM32_CFG_SYSCLK_SEL == RCC_CFGR1_SW_HSE)
   #define STM32_SYSCLK_FREQ                 STM32_HSE_FREQ
 #elif (STM32_SYSCLK_ENABLED == TRUE) && \
-      (STM32_CFG_SYSCLK_SEL == RCC_CFGR1_SW_PLL1R)
-  #define STM32_SYSCLK_FREQ                 STM32_PLL1R_FREQ
+      (STM32_CFG_SYSCLK_SEL == RCC_CFGR1_SW_PLL1P)
+  #define STM32_SYSCLK_FREQ                 STM32_PLL1P_FREQ
 #else
   #define STM32_SYSCLK_FREQ                 0U
 #endif
@@ -4914,8 +4894,8 @@
 #endif
 
 #if !(!((STM32_SYSCLK_ENABLED == TRUE) &&                                   \
-      (STM32_CFG_SYSCLK_SEL == RCC_CFGR1_SW_PLL1R)) ||                      \
-     (STM32_PLL1R_FREQ <= STM32_SYSCLK_MAX)) && !defined(__DOXYGEN__)
+      (STM32_CFG_SYSCLK_SEL == RCC_CFGR1_SW_PLL1P)) ||                      \
+     (STM32_PLL1P_FREQ <= STM32_SYSCLK_MAX)) && !defined(__DOXYGEN__)
   #error "STM32_SYSCLK_FREQ above maximum frequency"
 #endif
 
@@ -6373,18 +6353,6 @@
   #define STM32_SDMMC_CLOCK                 0U
 #endif
 
-#if !(!((STM32_SDMMC_ENABLED == TRUE) &&                                    \
-      (STM32_CFG_SDMMC_SEL == RCC_CCIPR2_SDMMCSEL_ICLK)) ||                 \
-     (STM32_ICLK_FREQ <= STM32_SDMMCCLK_MAX)) && !defined(__DOXYGEN__)
-  #error "STM32_SDMMC_FREQ above maximum frequency"
-#endif
-
-#if !(!((STM32_SDMMC_ENABLED == TRUE) &&                                    \
-      (STM32_CFG_SDMMC_SEL == RCC_CCIPR2_SDMMCSEL_PLL1P)) ||                \
-     (STM32_PLL1P_FREQ <= STM32_SDMMCCLK_MAX)) && !defined(__DOXYGEN__)
-  #error "STM32_SDMMC_FREQ above maximum frequency"
-#endif
-
 /* --- Macros and checks for the SDMMC1 clock point. -----------------------*/
 
 /**
@@ -7227,12 +7195,21 @@
    (clkpt) == CLK_HSE          ? STM32_HSE_FREQ           :                 \
    (clkpt) == CLK_MSIS         ? STM32_MSIS_FREQ          :                 \
    (clkpt) == CLK_MSIK         ? STM32_MSIK_FREQ          :                 \
+   (clkpt) == CLK_PLL1IN       ? STM32_PLL1IN_FREQ        :                 \
+   (clkpt) == CLK_PLL1REF      ? STM32_PLL1REF_FREQ       :                 \
+   (clkpt) == CLK_PLL1VCO      ? STM32_PLL1VCO_FREQ       :                 \
    (clkpt) == CLK_PLL1P        ? STM32_PLL1P_FREQ         :                 \
    (clkpt) == CLK_PLL1Q        ? STM32_PLL1Q_FREQ         :                 \
    (clkpt) == CLK_PLL1R        ? STM32_PLL1R_FREQ         :                 \
+   (clkpt) == CLK_PLL2IN       ? STM32_PLL2IN_FREQ        :                 \
+   (clkpt) == CLK_PLL2REF      ? STM32_PLL2REF_FREQ       :                 \
+   (clkpt) == CLK_PLL2VCO      ? STM32_PLL2VCO_FREQ       :                 \
    (clkpt) == CLK_PLL2P        ? STM32_PLL2P_FREQ         :                 \
    (clkpt) == CLK_PLL2Q        ? STM32_PLL2Q_FREQ         :                 \
    (clkpt) == CLK_PLL2R        ? STM32_PLL2R_FREQ         :                 \
+   (clkpt) == CLK_PLL3IN       ? STM32_PLL3IN_FREQ        :                 \
+   (clkpt) == CLK_PLL3REF      ? STM32_PLL3REF_FREQ       :                 \
+   (clkpt) == CLK_PLL3VCO      ? STM32_PLL3VCO_FREQ       :                 \
    (clkpt) == CLK_PLL3P        ? STM32_PLL3P_FREQ         :                 \
    (clkpt) == CLK_PLL3Q        ? STM32_PLL3Q_FREQ         :                 \
    (clkpt) == CLK_PLL3R        ? STM32_PLL3R_FREQ         :                 \

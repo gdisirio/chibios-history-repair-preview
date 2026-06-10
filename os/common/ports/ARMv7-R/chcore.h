@@ -475,16 +475,6 @@
 #else /* CH_CFG_SMP_MODE != TRUE */
 #endif /* CH_CFG_SMP_MODE != TRUE */
 
-/* Inclusion of platform sub-port support, if present.*/
-#if defined(PORT_HAS_PLATFORM) || defined(__DOXYGEN__)
-#if (PORT_HAS_PLATFORM != TRUE) && !defined(__DOXYGEN__)
-#error "PORT_HAS_PLATFORM must be set to TRUE when defined"
-#endif
-#if !defined(_FROM_ASM_)
-#include "port_platform.h"
-#endif
-#endif
-
 /*===========================================================================*/
 /* Module data structures and types.                                         */
 /*===========================================================================*/
@@ -499,8 +489,8 @@
  *          interrupt handler when preemption is required.
  */
 struct port_extctx {
-  uint32_t              pc_irq;
-  uint32_t              cpsr_irq;
+  uint32_t              spsr_irq;
+  uint32_t              lr_irq;
   uint32_t              r0;
   uint32_t              r1;
   uint32_t              r2;
@@ -560,6 +550,30 @@ struct port_context {
  * @brief   Optimized thread function declaration macro.
  */
 #define PORT_THD_FUNCTION(tname, arg) void tname(void *arg)
+
+/**
+ * @brief   Initialization of FPU part of thread context.
+ */
+#if (CORTEX_USE_FPU == TRUE) || defined(__DOXYGEN__)
+#define __PORT_SETUP_CONTEXT_FPU(tp)                                        \
+  (tp)->ctx.sp->fpscr = 0U
+#else
+#define __PORT_SETUP_CONTEXT_FPU(tp)
+#endif
+
+/**
+ * @brief   Platform dependent part of the @p chThdCreateI() API.
+ * @details This code usually setup the context switching frame represented
+ *          by an @p port_intctx structure.
+ */
+#define PORT_SETUP_CONTEXT(tp, wbase, wtop, pf, arg) {                      \
+  (tp)->ctx.sp = (struct port_intctx *)((uint8_t *)(wtop) -                 \
+                                        sizeof (struct port_intctx));       \
+  __PORT_SETUP_CONTEXT_FPU(tp);                                             \
+  (tp)->ctx.sp->r4 = (uint32_t)(pf);                                        \
+  (tp)->ctx.sp->r5 = (uint32_t)(arg);                                       \
+  (tp)->ctx.sp->lr = (uint32_t)__port_thread_start;                         \
+}
 
 /**
  * @brief   Computes the thread working area global size.
@@ -656,10 +670,6 @@ static inline void port_init(os_instance_t *oip) {
 
 #if PORT_MPU_INITIALIZE == TRUE
   __port_mpu_init();
-#endif
-
-#if defined(port_platform_init)
-  port_platform_init(oip);
 #endif
 
 #if defined(port_smp_init)
@@ -809,53 +819,6 @@ static inline void port_wait_for_interrupt(void) {
 #if PORT_ENABLE_WFI_IDLE == TRUE
   __asm volatile ("wfi");
 #endif
-}
-
-/**
- * @brief   Initialization of the base part of a thread context.
- * @details This function initializes those context fields which must be
- *          valid also for thread objects representing already-running
- *          execution flows (the boot thread of each instance), which do
- *          not go through the full creation path. Only fields which are
- *          read before being ever written by a context switch belong
- *          here.
- * @note    It is also invoked by @p port_setup_context() as part of the
- *          full context initialization.
- *
- * @param[out] ctxp     pointer to the port-dependent context structure
- */
-static inline void port_setup_context_base(struct port_context *ctxp) {
-
-  (void)ctxp;
-}
-
-/**
- * @brief   Platform dependent thread context setup.
- * @details This function is invoked by the thread creation APIs in order
- *          to initialize the port-dependent part of the thread context.
- *
- * @param[out] ctxp     pointer to the port-dependent context structure
- * @param[in] wbase     working area base address
- * @param[in] wtop      working area top address
- * @param[in] pf        thread function pointer
- * @param[in] arg       thread function argument
- */
-static inline void port_setup_context(struct port_context *ctxp,
-                                      void *wbase, void *wtop,
-                                      void (*pf)(void *), void *arg) {
-
-  port_setup_context_base(ctxp);
-
-  (void)wbase;
-
-  ctxp->sp = (struct port_intctx *)((uint8_t *)wtop -
-                                    sizeof (struct port_intctx));
-#if CORTEX_USE_FPU == TRUE
-  ctxp->sp->fpscr = 0U;
-#endif
-  ctxp->sp->r4 = (uint32_t)pf;
-  ctxp->sp->r5 = (uint32_t)arg;
-  ctxp->sp->lr = (uint32_t)__port_thread_start;
 }
 
 #endif /* !defined(_FROM_ASM_) */

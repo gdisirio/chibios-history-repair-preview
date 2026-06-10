@@ -81,49 +81,6 @@ See .devcontainer/README.md for included tools and usage.
 *****************************************************************************
 
 *** Next ***
-- NEW: STM32U5 support extended: EPOD booster clock handling and a generated
-       clock tree, the STM32U575ZI-Nucleo144 board and RT-STM32-MULTI demo
-       configuration, and the STM32U575xx mcuconf template and updater
-       (github PR #56).
-- FIX: RT thread registry reference accounting was inconsistent when dynamic
-       threads are disabled (CH_CFG_USE_DYNAMIC = FALSE): chRegFirstThread()
-       and chRegNextThread() did not count the reference they hand out while
-       chThdRelease() still released it, risking a reference-count underflow.
-       The registry lookups now reference threads unconditionally (github
-       PR #51)(backported to 21.11.6).
-- FIX: NASA OSAL OS_TaskGetInfo() computed the task working-area size before
-       validating the task id, dereferencing a possibly-invalid thread pointer;
-       the computation is now done after the validity check (github PR #51)(backported to 21.11.6).
-- FIX: nvicSetSystemHandlerPriority() programmed the wrong SCB->SHPR field on
-       Cortex-M0, M0+ and M23: the positive ChibiOS handler index was passed
-       to the CMSIS _SHP_IDX()/_BIT_SHIFT() macros, which expect the negative
-       system exception number, so the priority write (e.g. SysTick from the
-       ST driver) landed on the wrong register slot - SysTick was left at its
-       reset priority and another handler's priority was corrupted. The handler
-       index is now converted to the matching exception number (HAL and XHAL
-       ports) (forum bug report, github PR #34)(backported to 21.11.6).
-- FIX: RP2040 early (pre-XOSC) tick generator was configured with a divisor of
-       1 instead of clk/1MHz, so the boot-time microsecond tick ran about six
-       times too fast until clk_ref switched to the XOSC (the post-switch
-       reconfiguration was already correct). The RP2350 path was already
-       correct, a redundant semicolon was removed there (github PR #35).
-- FIX: STM32U3 RTC was completely non-functional - the driver hung at boot in
-       rtc_enter_init() waiting for INITF. The RTC APB clock was never enabled:
-       hal_lld guarded it on defined(RCC_APB3ENR_RTCAPBEN) (the STM32H5/U5
-       register), but on STM32U3 the bit is RCC_APB1ENR1_RTCAPBEN (APB1ENR1
-       bit 30), so the guard was always false and the RTC register interface
-       was unclocked. Enable it via rccEnableAPB1R1(RCC_APB1ENR1_RTCAPBEN) on
-       STM32U3xx (HAL + XHAL). HW-verified on NUCLEO-U385RG (github PR #31).
-- FIX: STM32U3 and STM32U5 RTC drivers operated on the wrong EXTI lines. The
-       ports defined STM32_RTC_GLOBAL_EXTI=17 / STM32_RTC_TAMP_EXTI=19 (copied
-       from STM32H5) and enabled/cleared them, but on U3/U5 those lines are
-       COMP1 and VDDUSB (RM0487 Table 131 / RM0456 Table 187) and the RTC has
-       no EXTI line at all (RTC interrupts go directly to the NVIC). The RTC
-       EXTI enable/clear are now no-ops on both families (HAL and XHAL ports)
-       (github PR #31).
-- NEW: Coding-style cleanup (whitespace, spacing and comment formatting) of
-       the os/hal/lib sources (streams, mfs, serial_nor), no functional
-       change (github PR #30).
 - NEW: Coding-style cleanup (whitespace, spacing and comment formatting) of
        the os/various sources (shell, xshell, bindings glue), no functional
        change (github PR #29).
@@ -182,9 +139,6 @@ See .devcontainer/README.md for included tools and usage.
        registry switch for the FMC-capable devices (G473/G483/G474/G484),
        in all four G4 port copies (github PR #14)(backported to
        21.11.6).
-- FIX: OTG1 on STM32H7 kept its ULPI clock gate at the reset-enabled state,
-       preventing sleep mode entry/exit when the driver is active (forum
-       bug report, github PR #13).
 - FIX: Missing SPI2 RCC macros and DMAMUX identifiers in the STM32C0xx
        HAL and XHAL ports, SPI2 was unusable on the devices that have it (forum
        bug report, github PR #12).
