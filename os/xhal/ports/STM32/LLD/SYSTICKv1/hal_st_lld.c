@@ -56,7 +56,18 @@
 #define ST_NUMBER                           STM32_TIM1_CC_NUMBER
 #define ST_CLOCK_SRC                        STM32_TIMCLK1
 #define ST_ENABLE_CLOCK()                   rccEnableTIM1(true)
-#define ST_ENABLE_STOP()                    STM32_DBGMCU_TIM1_STOP()
+#if defined(STM32F1XX)
+#define ST_ENABLE_STOP()                    DBGMCU->CR |= DBGMCU_CR_DBG_TIM1_STOP
+#elif defined(STM32L4XX) || defined(STM32L4XXP) || defined(STM32G4XX) ||    \
+      defined(STM32L5XX) || defined(STM32WBXX) || defined(STM32WLXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZR1 |= DBGMCU_APB1FZR1_DBG_TIM1_STOP
+#elif defined(STM32G0XX)
+#define ST_ENABLE_STOP()                    DBG->APBFZ1 |= DBG_APB_FZ1_DBG_TIM1_STOP
+#elif defined(STM32H7XX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_TIM1
+#else
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZ |= DBGMCU_APB1_FZ_DBG_TIM1_STOP
+#endif
 
 #elif STM32_ST_USE_TIMER == 2
 
@@ -72,7 +83,18 @@
 #define ST_NUMBER                           STM32_TIM2_NUMBER
 #define ST_CLOCK_SRC                        STM32_TIMCLK1
 #define ST_ENABLE_CLOCK()                   rccEnableTIM2(true)
-#define ST_ENABLE_STOP()                    STM32_DBGMCU_TIM2_STOP()
+#if defined(STM32F1XX)
+#define ST_ENABLE_STOP()                    DBGMCU->CR |= DBGMCU_CR_DBG_TIM2_STOP
+#elif defined(STM32L4XX) || defined(STM32L4XXP) || defined(STM32G4XX) ||    \
+      defined(STM32L5XX) || defined(STM32WBXX) || defined(STM32WLXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZR1 |= DBGMCU_APB1FZR1_DBG_TIM2_STOP
+#elif defined(STM32G0XX)
+#define ST_ENABLE_STOP()                    DBG->APBFZ1 |= DBG_APB_FZ1_DBG_TIM2_STOP
+#elif defined(STM32H7XX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_TIM2
+#else
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZ |= DBGMCU_APB1_FZ_DBG_TIM2_STOP
+#endif
 
 #elif STM32_ST_USE_TIMER == 3
 
@@ -88,7 +110,18 @@
 #define ST_NUMBER                           STM32_TIM3_NUMBER
 #define ST_CLOCK_SRC                        STM32_TIMCLK1
 #define ST_ENABLE_CLOCK()                   rccEnableTIM3(true)
-#define ST_ENABLE_STOP()                    STM32_DBGMCU_TIM3_STOP()
+#if defined(STM32F1XX)
+#define ST_ENABLE_STOP()                    DBGMCU->CR |= DBGMCU_CR_DBG_TIM3_STOP
+#elif defined(STM32L4XX) || defined(STM32L4XXP) || defined(STM32G4XX) ||    \
+      defined(STM32L5XX) || defined(STM32WBXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZR1 |= DBGMCU_APB1FZR1_DBG_TIM3_STOP
+#elif defined(STM32G0XX)
+#define ST_ENABLE_STOP()                    DBG->APBFZ1 |= DBG_APB_FZ1_DBG_TIM3_STOP
+#elif defined(STM32H7XX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_TIM3
+#else
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZ |= DBGMCU_APB1_FZ_DBG_TIM3_STOP
+#endif
 
 #elif STM32_ST_USE_TIMER == 4
 
@@ -104,7 +137,16 @@
 #define ST_NUMBER                           STM32_TIM4_NUMBER
 #define ST_CLOCK_SRC                        STM32_TIMCLK1
 #define ST_ENABLE_CLOCK()                   rccEnableTIM4(true)
-#define ST_ENABLE_STOP()                    STM32_DBGMCU_TIM4_STOP()
+#if defined(STM32F1XX)
+#define ST_ENABLE_STOP()                    DBGMCU->CR |= DBGMCU_CR_DBG_TIM4_STOP
+#elif defined(STM32L4XX) || defined(STM32L4XXP) || defined(STM32G4XX) ||    \
+      defined(STM32L5XX) || defined(STM32WBXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZR1 |= DBGMCU_APB1FZR1_DBG_TIM4_STOP
+#elif defined(STM32H7XX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_TIM4
+#else
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZ |= DBGMCU_APB1_FZ_DBG_TIM4_STOP
+#endif
 
 #elif STM32_ST_USE_TIMER == 5
 
@@ -120,7 +162,16 @@
 #define ST_NUMBER                           STM32_TIM5_NUMBER
 #define ST_CLOCK_SRC                        STM32_TIMCLK1
 #define ST_ENABLE_CLOCK()                   rccEnableTIM5(true)
-#define ST_ENABLE_STOP()                    STM32_DBGMCU_TIM5_STOP()
+#if defined(STM32F1XX)
+#define ST_ENABLE_STOP()                    DBGMCU->CR |= DBGMCU_CR_DBG_TIM5_STOP
+#elif defined(STM32L4XX) || defined(STM32L4XXP) || defined(STM32G4XX) ||    \
+      defined(STM32L5XX) || defined(STM32WBXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZR1 |= DBGMCU_APB1FZR1_DBG_TIM5_STOP
+#elif defined(STM32H7XX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_TIM5
+#else
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZ |= DBGMCU_APB1_FZ_DBG_TIM5_STOP
+#endif
 
 #elif STM32_ST_USE_TIMER == 8
 
@@ -136,7 +187,18 @@
 #define ST_NUMBER                           STM32_TIM8_CC_NUMBER
 #define ST_CLOCK_SRC                        STM32_TIMCLK1
 #define ST_ENABLE_CLOCK()                   rccEnableTIM8(true)
-#define ST_ENABLE_STOP()                    STM32_DBGMCU_TIM8_STOP()
+#if defined(STM32F1XX)
+#define ST_ENABLE_STOP()                    DBGMCU->CR |= DBGMCU_CR_DBG_TIM8_STOP
+#elif defined(STM32L4XX) || defined(STM32L4XXP) || defined(STM32G4XX) ||    \
+      defined(STM32L5XX) || defined(STM32WBXX) || defined(STM32WLXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZR1 |= DBGMCU_APB1FZR1_DBG_TIM8_STOP
+#elif defined(STM32G0XX)
+#define ST_ENABLE_STOP()                    DBG->APBFZ1 |= DBG_APB_FZ1_DBG_TIM8_STOP
+#elif defined(STM32H7XX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_TIM8
+#else
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZ |= DBGMCU_APB1_FZ_DBG_TIM8_STOP
+#endif
 
 #elif STM32_ST_USE_TIMER == 9
 
@@ -152,7 +214,16 @@
 #define ST_NUMBER                           STM32_TIM9_NUMBER
 #define ST_CLOCK_SRC                        STM32_TIMCLK2
 #define ST_ENABLE_CLOCK()                   rccEnableTIM9(true)
-#define ST_ENABLE_STOP()                    STM32_DBGMCU_TIM9_STOP()
+#if defined(STM32F1XX)
+#define ST_ENABLE_STOP()                    DBGMCU->CR |= DBGMCU_CR_DBG_TIM9_STOP
+#elif defined(STM32L4XX) || defined(STM32L4XXP) || defined(STM32G4XX) ||    \
+      defined(STM32L5XX) || defined(STM32WBXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZR1 |= DBGMCU_APB2FZR1_DBG_TIM9_STOP
+#elif defined(STM32H7XX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB2LFZ1 |= DBGMCU_APB2LFZ1_DBG_TIM9
+#else
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZ |= DBGMCU_APB2_FZ_DBG_TIM9_STOP
+#endif
 
 #elif STM32_ST_USE_TIMER == 10
 
@@ -168,7 +239,16 @@
 #define ST_NUMBER                           STM32_TIM10_NUMBER
 #define ST_CLOCK_SRC                        STM32_TIMCLK2
 #define ST_ENABLE_CLOCK()                   rccEnableTIM10(true)
-#define ST_ENABLE_STOP()                    STM32_DBGMCU_TIM10_STOP()
+#if defined(STM32F1XX)
+#define ST_ENABLE_STOP()                    DBGMCU->CR |= DBGMCU_CR_DBG_TIM10_STOP
+#elif defined(STM32L4XX) || defined(STM32L4XXP) || defined(STM32G4XX) ||    \
+      defined(STM32L5XX) || defined(STM32WBXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZR1 |= DBGMCU_APB2FZR1_DBG_TIM10_STOP
+#elif defined(STM32H7XX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB2LFZ1 |= DBGMCU_APB2LFZ1_DBG_TIM10
+#else
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZ |= DBGMCU_APB2_FZ_DBG_TIM10_STOP
+#endif
 
 #elif STM32_ST_USE_TIMER == 11
 
@@ -184,7 +264,16 @@
 #define ST_NUMBER                           STM32_TIM11_NUMBER
 #define ST_CLOCK_SRC                        STM32_TIMCLK2
 #define ST_ENABLE_CLOCK()                   rccEnableTIM11(true)
-#define ST_ENABLE_STOP()                    STM32_DBGMCU_TIM11_STOP()
+#if defined(STM32F1XX)
+#define ST_ENABLE_STOP()                    DBGMCU->CR |= DBGMCU_CR_DBG_TIM11_STOP
+#elif defined(STM32L4XX) || defined(STM32L4XXP) || defined(STM32G4XX) ||    \
+      defined(STM32L5XX) || defined(STM32WBXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZR1 |= DBGMCU_APB2FZR1_DBG_TIM11_STOP
+#elif defined(STM32H7XX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB2LFZ1 |= DBGMCU_APB2LFZ1_DBG_TIM11
+#else
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZ |= DBGMCU_APB2_FZ_DBG_TIM11_STOP
+#endif
 
 #elif STM32_ST_USE_TIMER == 12
 
@@ -200,7 +289,16 @@
 #define ST_NUMBER                           STM32_TIM12_NUMBER
 #define ST_CLOCK_SRC                        STM32_TIMCLK1
 #define ST_ENABLE_CLOCK()                   rccEnableTIM12(true)
-#define ST_ENABLE_STOP()                    STM32_DBGMCU_TIM12_STOP()
+#if defined(STM32F1XX)
+#define ST_ENABLE_STOP()                    DBGMCU->CR |= DBGMCU_CR_DBG_TIM12_STOP
+#elif defined(STM32L4XX) || defined(STM32L4XXP) || defined(STM32G4XX) ||    \
+      defined(STM32L5XX) || defined(STM32WBXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZR1 |= DBGMCU_APB1FZR1_DBG_TIM12_STOP
+#elif defined(STM32H7XX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_TIM12
+#else
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZ |= DBGMCU_APB1_FZ_DBG_TIM12_STOP
+#endif
 
 #elif STM32_ST_USE_TIMER == 13
 
@@ -216,7 +314,16 @@
 #define ST_NUMBER                           STM32_TIM13_NUMBER
 #define ST_CLOCK_SRC                        STM32_TIMCLK1
 #define ST_ENABLE_CLOCK()                   rccEnableTIM13(true)
-#define ST_ENABLE_STOP()                    STM32_DBGMCU_TIM13_STOP()
+#if defined(STM32F1XX)
+#define ST_ENABLE_STOP()                    DBGMCU->CR |= DBGMCU_CR_DBG_TIM13_STOP
+#elif defined(STM32L4XX) || defined(STM32L4XXP) || defined(STM32G4XX) ||    \
+      defined(STM32L5XX) || defined(STM32WBXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZR1 |= DBGMCU_APB1FZR1_DBG_TIM13_STOP
+#elif defined(STM32H7XX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_TIM13
+#else
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZ |= DBGMCU_APB1_FZ_DBG_TIM13_STOP
+#endif
 
 #elif STM32_ST_USE_TIMER == 14
 
@@ -232,7 +339,16 @@
 #define ST_NUMBER                           STM32_TIM14_NUMBER
 #define ST_CLOCK_SRC                        STM32_TIMCLK1
 #define ST_ENABLE_CLOCK()                   rccEnableTIM14(true)
-#define ST_ENABLE_STOP()                    STM32_DBGMCU_TIM14_STOP()
+#if defined(STM32F1XX)
+#define ST_ENABLE_STOP()                    DBGMCU->CR |= DBGMCU_CR_DBG_TIM14_STOP
+#elif defined(STM32L4XX) || defined(STM32L4XXP) || defined(STM32G4XX) ||    \
+      defined(STM32L5XX) || defined(STM32WBXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZR1 |= DBGMCU_APB1FZR1_DBG_TIM14_STOP
+#elif defined(STM32H7XX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_TIM14
+#else
+#define ST_ENABLE_STOP()                    DBGMCU->APB1FZ |= DBGMCU_APB1_FZ_DBG_TIM14_STOP
+#endif
 
 #elif STM32_ST_USE_TIMER == 15
 
@@ -248,7 +364,16 @@
 #define ST_NUMBER                           STM32_TIM15_NUMBER
 #define ST_CLOCK_SRC                        STM32_TIMCLK2
 #define ST_ENABLE_CLOCK()                   rccEnableTIM15(true)
-#define ST_ENABLE_STOP()                    STM32_DBGMCU_TIM15_STOP()
+#if defined(STM32F1XX)
+#define ST_ENABLE_STOP()                    DBGMCU->CR |= DBGMCU_CR_DBG_TIM15_STOP
+#elif defined(STM32L4XX) || defined(STM32L4XXP) || defined(STM32G4XX) ||    \
+      defined(STM32L5XX) || defined(STM32WBXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZ |= DBGMCU_APB2FZ_DBG_TIM15_STOP
+#elif defined(STM32H7XX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZ1 |= DBGMCU_APB2FZ1_DBG_TIM15
+#else
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZ |= DBGMCU_APB2_FZ_DBG_TIM15_STOP
+#endif
 
 #elif STM32_ST_USE_TIMER == 16
 
@@ -264,7 +389,18 @@
 #define ST_NUMBER                           STM32_TIM16_NUMBER
 #define ST_CLOCK_SRC                        STM32_TIMCLK2
 #define ST_ENABLE_CLOCK()                   rccEnableTIM16(true)
-#define ST_ENABLE_STOP()                    STM32_DBGMCU_TIM16_STOP()
+#if defined(STM32F1XX)
+#define ST_ENABLE_STOP()                    DBGMCU->CR |= DBGMCU_CR_DBG_TIM16_STOP
+#elif defined(STM32L4XX) || defined(STM32L4XXP) || defined(STM32G4XX) ||    \
+      defined(STM32L5XX) || defined(STM32WLXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZ |= DBGMCU_APB2FZ_DBG_TIM16_STOP
+#elif defined(STM32WBXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZR |= DBGMCU_APB2FZR_DBG_TIM16_STOP
+#elif defined(STM32H7XX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZ1 |= DBGMCU_APB2FZ1_DBG_TIM16
+#else
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZ |= DBGMCU_APB2_FZ_DBG_TIM16_STOP
+#endif
 
 #elif STM32_ST_USE_TIMER == 17
 
@@ -280,7 +416,18 @@
 #define ST_NUMBER                           STM32_TIM17_NUMBER
 #define ST_CLOCK_SRC                        STM32_TIMCLK2
 #define ST_ENABLE_CLOCK()                   rccEnableTIM17(true)
-#define ST_ENABLE_STOP()                    STM32_DBGMCU_TIM17_STOP()
+#if defined(STM32F1XX)
+#define ST_ENABLE_STOP()                    DBGMCU->CR |= DBGMCU_CR_DBG_TIM17_STOP
+#elif defined(STM32L4XX) || defined(STM32L4XXP) || defined(STM32G4XX) ||    \
+      defined(STM32L5XX) || defined(STM32WLXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZ |= DBGMCU_APB2FZ_DBG_TIM17_STOP
+#elif defined(STM32WBXX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZR |= DBGMCU_APB2FZR_DBG_TIM17_STOP
+#elif defined(STM32H7XX)
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZ1 |= DBGMCU_APB2FZ1_DBG_TIM17
+#else
+#define ST_ENABLE_STOP()                    DBGMCU->APB2FZ |= DBGMCU_APB2_FZ_DBG_TIM17_STOP
+#endif
 
 #elif STM32_ST_USE_TIMER == 21
 
