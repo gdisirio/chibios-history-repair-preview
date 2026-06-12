@@ -32,28 +32,6 @@
 /* Module local definitions.                                                 */
 /*===========================================================================*/
 
-/* The read-modify-write sequences on the shared VRQ state (vrq.isr,
-   vrq.wtmask, vrq.flags[]) in the fastcall handlers below are NOT explicitly
-   locked: their atomicity against the asynchronous producers (sbVRQTriggerI()
-   and sbVRQSetFlagsI(), both I-class) rests entirely on a priority invariant.
-   The handlers run at the SVCall priority, while any IRQ allowed to call an
-   I-class function sits at CORTEX_MAX_KERNEL_PRIORITY or below (numerically
-   higher, i.e. less urgent). SVCall therefore out-prioritizes every VRQ
-   producer and a producer cannot preempt a handler mid-sequence; the
-   sequences are atomic by construction (see note_sb_isolation_security.md,
-   margin 6). The fast-priority band above SVCall cannot produce VRQs because
-   it cannot call OS primitives.
-
-   This guard fails the build if a port or priority reconfiguration ever
-   breaks that ordering, rather than silently reopening the lost-update race.
-   The ALT ports define CORTEX_MAX_KERNEL_PRIORITY == CORTEX_PRIORITY_SVCALL + 1
-   so the invariant holds. (Lower numeric value == higher priority.) */
-#if defined(CORTEX_PRIORITY_SVCALL) && defined(CORTEX_MAX_KERNEL_PRIORITY)
-#if CORTEX_PRIORITY_SVCALL >= CORTEX_MAX_KERNEL_PRIORITY
-#error "VRQ state atomicity requires SVCall to out-prioritize every kernel-preempting IRQ (CORTEX_PRIORITY_SVCALL < CORTEX_MAX_KERNEL_PRIORITY)"
-#endif
-#endif
-
 /*===========================================================================*/
 /* Module exported variables.                                                */
 /*===========================================================================*/
@@ -365,7 +343,7 @@ void sbVRQTriggerI(sb_class_t *sbp, sb_vrqnum_t nvrq) {
   }
 }
 
-void sb_fastc_vrq_set_alarm(sb_class_t *sbp, struct port_extctx *ectxp) {
+void sb_sysc_vrq_set_alarm(sb_class_t *sbp, struct port_extctx *ectxp) {
   sysinterval_t interval = (sysinterval_t)ectxp->r0;
   bool reload = (bool)ectxp->r1;
 
@@ -374,35 +352,21 @@ void sb_fastc_vrq_set_alarm(sb_class_t *sbp, struct port_extctx *ectxp) {
     return;
   }
 
-  /* IRQ-like fastcall: arming a virtual timer is a non-blocking I-class
-     operation; the alarm fires later through delay_cb() as a VRQ. The
-     ...I variants reset the timer first if already armed, matching the
-     locking forms they replace.*/
-  CH_IRQ_PROLOGUE();
-  chSysLockFromISR();
   if (reload) {
-    chVTSetContinuousI(&sbp->vrq.alarm_vt, interval, delay_cb, (void *)sbp);
+    chVTSetContinuous(&sbp->vrq.alarm_vt, interval, delay_cb, (void *)sbp);
   }
   else {
-    chVTSetI(&sbp->vrq.alarm_vt, interval, delay_cb, (void *)sbp);
+    chVTSet(&sbp->vrq.alarm_vt, interval, delay_cb, (void *)sbp);
   }
-  chSysUnlockFromISR();
-  CH_IRQ_EPILOGUE();
 
   ectxp->r0 = (uint32_t)CH_RET_SUCCESS;
 }
 
-void sb_fastc_vrq_reset_alarm(sb_class_t *sbp, struct port_extctx *ectxp) {
+void sb_sysc_vrq_reset_alarm(sb_class_t *sbp, struct port_extctx *ectxp) {
 
   (void)ectxp;
 
-  /* IRQ-like fastcall: disarming a virtual timer is a non-blocking I-class
-     operation. chVTResetI() is a no-op if the timer is not armed.*/
-  CH_IRQ_PROLOGUE();
-  chSysLockFromISR();
-  chVTResetI(&sbp->vrq.alarm_vt);
-  chSysUnlockFromISR();
-  CH_IRQ_EPILOGUE();
+  chVTReset(&sbp->vrq.alarm_vt);
 }
 
 void sb_sysc_vrq_wait(sb_class_t *sbp, struct port_extctx *ectxp) {
