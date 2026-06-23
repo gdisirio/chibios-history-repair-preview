@@ -128,7 +128,6 @@ extern "C" {
   thread_t *chRegNextThread(thread_t *tp);
   thread_t *chRegFindThreadByName(const char *name);
   thread_t *chRegFindThreadByPointer(thread_t *tp);
-  bool chRegIsWorkingAreaInUseI(stkline_t *wa);
   thread_t *chRegFindThreadByWorkingArea(stkline_t *wa);
 #ifdef __cplusplus
 }
