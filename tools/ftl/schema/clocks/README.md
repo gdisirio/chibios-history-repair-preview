@@ -42,12 +42,8 @@ jar.
   configured configuration prefix.
 - Clock `enable` is required and currently accepts `manual`, `auto`, `always`,
   and `never`.
-- Clock `dynamic` is required and marks that a point can vary at runtime,
-  independently from enable mode.
-- Clock `private` is optional, defaults to `false`, and suppresses public
-  runtime `CLK_<POINT>` export for internal clock-tree nodes. A private dynamic
-  point still emits internal `_FREQ` and current-clock macros for downstream
-  calculations.
+- Clock `dynamic` is required and marks membership in the dynamic clock point
+  set, independently from enable mode.
 - Root clock points can be modeled in the optional top-level `sources` list.
   A source emits one clock point but has no upstream input; it can still use
   a fixed `frequency` attribute or conditional `<frequencies>` table, enable
@@ -102,11 +98,9 @@ before clocks:
 - an `<POINT>_BITS` macro;
 - an `<POINT><frequency-suffix>` macro, with disabled clocks producing zero
   frequency;
-- an `<POINT><current-clock-suffix>` macro. For public dynamic clock points this
-  uses `hal_lld_get_clock_point(CLK_<POINT>)`; the static-mode getter macro
-  resolves that expression to the static frequency macro when dynamic mode is
-  disabled. Private dynamic points instead emit an internal current-clock
-  expression without a public `CLK_<POINT>` index;
+- an `<POINT><current-clock-suffix>` macro. For dynamic clock points this uses
+  `hal_lld_get_clock_point(CLK_<POINT>)`; the static-mode getter macro resolves
+  that expression to the static frequency macro when dynamic mode is disabled;
 - compile-time value checks for generated configuration settings;
 - grouped state-specific frequency limit definitions and one selected final
   limit block where a limit model is declared;

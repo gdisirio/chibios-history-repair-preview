@@ -262,11 +262,6 @@ thread_t *chThdSpawnSuspendedI(thread_t *tp,
              (tdp->wend > tdp->wbase) &&
              (((size_t)tdp->wend - (size_t)tdp->wbase) >= THD_STACK_SIZE(0)));
 
-#if CH_CFG_USE_REGISTRY == TRUE
-  chDbgAssert(!chRegIsWorkingAreaInUseI(tdp->wbase),
-              "working area in use");
-#endif
-
   /* Thread object initialization.*/
   tp = chThdObjectInit(tp, tdp);
 
@@ -299,6 +294,11 @@ thread_t *chThdSpawnSuspendedI(thread_t *tp,
  */
 thread_t *chThdSpawnSuspended(thread_t *tp,
                               const thread_descriptor_t *tdp) {
+
+#if CH_CFG_USE_REGISTRY == TRUE
+  chDbgAssert(chRegFindThreadByWorkingArea((void *)tdp->wbase) == NULL,
+              "working area in use");
+#endif
 
   thd_clear(tdp);
 
@@ -346,6 +346,12 @@ thread_t *chThdSpawnRunningI(thread_t *tp, const thread_descriptor_t *tdp) {
  * @iclass
  */
 thread_t *chThdSpawnRunning(thread_t *tp, const thread_descriptor_t *tdp) {
+
+#if (CH_CFG_USE_REGISTRY == TRUE) &&                                        \
+    ((CH_DBG_ENABLE_STACK_CHECK == TRUE) || (CH_CFG_USE_DYNAMIC == TRUE))
+  chDbgAssert(chRegFindThreadByWorkingArea((void *)tdp->wbase) == NULL,
+              "working area in use");
+#endif
 
   thd_clear(tdp);
 
@@ -401,11 +407,6 @@ thread_t *chThdCreateSuspendedI(const thread_descriptor_t *tdp) {
   chDbgCheck(MEM_IS_ALIGNED(stkbase, PORT_WORKING_AREA_ALIGN) &&
              MEM_IS_ALIGNED(stktop, PORT_STACK_ALIGN));
 
-#if CH_CFG_USE_REGISTRY == TRUE
-  chDbgAssert(!chRegIsWorkingAreaInUseI(tdp->wbase),
-              "working area in use");
-#endif
-
   /* The thread object is initialized but not started.*/
   tp = chThdObjectInit(threadref(stktop), tdp);
 
@@ -438,6 +439,11 @@ thread_t *chThdCreateSuspendedI(const thread_descriptor_t *tdp) {
  */
 thread_t *chThdCreateSuspended(const thread_descriptor_t *tdp) {
   thread_t *tp;
+
+#if CH_CFG_USE_REGISTRY == TRUE
+  chDbgAssert(chRegFindThreadByWorkingArea(tdp->wbase) == NULL,
+              "working area in use");
+#endif
 
 #if CH_DBG_FILL_THREADS == TRUE
   __thd_stackfill((uint8_t *)tdp->wbase, (uint8_t *)tdp->wend);
@@ -489,6 +495,12 @@ thread_t *chThdCreateI(const thread_descriptor_t *tdp) {
 thread_t *chThdCreate(const thread_descriptor_t *tdp) {
   thread_t *tp;
 
+#if (CH_CFG_USE_REGISTRY == TRUE) &&                                        \
+    ((CH_DBG_ENABLE_STACK_CHECK == TRUE) || (CH_CFG_USE_DYNAMIC == TRUE))
+  chDbgAssert(chRegFindThreadByWorkingArea(tdp->wbase) == NULL,
+              "working area in use");
+#endif
+
 #if CH_DBG_FILL_THREADS == TRUE
   __thd_stackfill((uint8_t *)tdp->wbase, (uint8_t *)tdp->wend);
 #endif
@@ -533,6 +545,13 @@ thread_t *chThdCreateStatic(stkline_t *wbase, size_t wsize,
   /* Other checks.*/
   chDbgCheck((prio <= HIGHPRIO) && (func != NULL));
 
+#if CH_CFG_USE_REGISTRY == TRUE
+  /* Special situation where the working area is already in use by an
+     active thread.*/
+  chDbgAssert(chRegFindThreadByWorkingArea(wbase) == NULL,
+              "working area in use");
+#endif
+
   /* Working area end address.*/
   wend = (uint8_t *)wbase + wsize;
 
@@ -551,7 +570,7 @@ thread_t *chThdCreateStatic(stkline_t *wbase, size_t wsize,
 #endif
 
   /* Initializing the thread_t structure using the passed parameters.*/
-  THD_DESC_DECL(desc, "noname", wbase, wend, prio, func, arg, currcore);
+  THD_DESC_DECL(desc, "noname", wbase, wend, prio, func, arg, currcore, NULL);
   tp = chThdObjectInit(threadref(stktop), &desc);
 
   /* Setting up the port-dependent part of the working area.*/
@@ -560,11 +579,6 @@ thread_t *chThdCreateStatic(stkline_t *wbase, size_t wsize,
   chSysLock();
 
 #if CH_CFG_USE_REGISTRY == TRUE
-  /* Special situation where the working area is already in use by an
-     active thread.*/
-  chDbgAssert(!chRegIsWorkingAreaInUseI(wbase),
-              "working area in use");
-
   REG_INSERT(tp->owner, tp);
 #endif
 

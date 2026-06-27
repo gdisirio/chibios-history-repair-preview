@@ -475,16 +475,6 @@
 #else /* CH_CFG_SMP_MODE != TRUE */
 #endif /* CH_CFG_SMP_MODE != TRUE */
 
-/* Inclusion of platform sub-port support, if present.*/
-#if defined(PORT_HAS_PLATFORM) || defined(__DOXYGEN__)
-#if (PORT_HAS_PLATFORM != TRUE) && !defined(__DOXYGEN__)
-#error "PORT_HAS_PLATFORM must be set to TRUE when defined"
-#endif
-#if !defined(_FROM_ASM_)
-#include "port_platform.h"
-#endif
-#endif
-
 /*===========================================================================*/
 /* Module data structures and types.                                         */
 /*===========================================================================*/
@@ -499,8 +489,8 @@
  *          interrupt handler when preemption is required.
  */
 struct port_extctx {
-  uint32_t              pc_irq;
-  uint32_t              cpsr_irq;
+  uint32_t              spsr_irq;
+  uint32_t              lr_irq;
   uint32_t              r0;
   uint32_t              r1;
   uint32_t              r2;
@@ -656,10 +646,6 @@ static inline void port_init(os_instance_t *oip) {
 
 #if PORT_MPU_INITIALIZE == TRUE
   __port_mpu_init();
-#endif
-
-#if defined(port_platform_init)
-  port_platform_init(oip);
 #endif
 
 #if defined(port_smp_init)
