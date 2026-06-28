@@ -37,6 +37,9 @@ jar.
 - Generic configurations currently support `bool`, `value`, `set`, and `raw`
   types. `bool`, constrained `value`, and `set` configurations emit generated
   compile-time checks.
+- `settings/asserts/assert` provides cross-configuration compile-time
+  assertions for constraints that involve multiple settings, such as valid
+  oscillator reference/frequency combinations.
 - Semantic generator settings are marked by `role`; `CLOCK_DYNAMIC` is a
   generic boolean config name with role `dynamic_mode`, emitted using the
   configured configuration prefix.
@@ -142,6 +145,34 @@ over an externally supplied array of clock point values. Full reconstruction of
 clock point values from RCC register state stays in `hal_lld.c` for now because
 it depends on device-specific decoding and initialization semantics that are not
 fully modeled in the XML.
+
+## Future Variant Support
+
+Some STM32 families need one generated `clocktree.h` to support multiple device
+parts whose RCC fields and peripherals differ. The intended direction is to add
+variant feature groups to the XML, associate each group with one or more CMSIS
+part-number macros, and allow schema elements to declare an optional
+`variants="..."` attribute. Missing `variants` means the element applies to all
+parts.
+
+Variant handling must be compile-time in the generated header, not a generator
+filter. The header should detect the active part from CMSIS `STM32...` macros,
+derive generated `STM32_CLOCKTREE_HAS_<FEATURE>` flags, and emit `#error` if no
+known part macro matches. This preserves a single generated header for the whole
+family.
+
+Absent variant-specific clocks and sinks should still emit inert definitions
+instead of disappearing. A sink outside the active variant should demand
+`FALSE`; a clock outside the active variant should emit disabled state, zero
+bits, and zero frequency/current-clock macros. This keeps auto-propagation
+expressions stable and avoids undefined generated clock symbols.
+
+The generator still needs variant awareness wherever XML expressions reference
+device-header symbols that do not exist on smaller parts, such as optional RCC
+register fields. Those definitions, config checks, selector constants, and
+register-bit expressions must be wrapped in the proper feature guards. This is a
+larger generator rework and should be applied consistently to the existing G4,
+U3, U5, and C5 XMLs when implemented.
 
 ## Dynamic Reconfiguration Contract
 

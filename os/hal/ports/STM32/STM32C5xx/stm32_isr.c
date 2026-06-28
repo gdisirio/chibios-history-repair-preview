@@ -15,29 +15,25 @@
 */
 
 /**
- * @file    ARMv7-R/platforms/simulator/port_platform.c
- * @brief   ARMv7-R simulator sub-port support code.
+ * @file    STM32C5xx/stm32_isr.c
+ * @brief   STM32C5xx ISR handler code.
  *
- * @addtogroup ARMV7R_SIMULATOR
+ * @addtogroup STM32C5xx_ISR
  * @{
  */
 
-#include "arm_gicv2.h"
-#include "ch.h"
+#include "hal.h"
 
 /*===========================================================================*/
 /* Driver local definitions.                                                 */
 /*===========================================================================*/
 
-#define R8_RENODE_PRIVATE_TIMER_IRQ     29U
-#define R8_RENODE_PRIVATE_TIMER_PRIO    0x80U
-
 /*===========================================================================*/
-/* Driver local types.                                                       */
+/* Driver exported variables.                                                */
 /*===========================================================================*/
 
 /*===========================================================================*/
-/* Driver local variables.                                                   */
+/* Driver local variables and types.                                         */
 /*===========================================================================*/
 
 /*===========================================================================*/
@@ -48,38 +44,16 @@
 /* Driver interrupt handlers.                                                */
 /*===========================================================================*/
 
-/**
- * @brief   Simulator IRQ dispatcher adapter.
- *
- * @return              The preemption-required flag.
- *
- * @notapi
- */
-bool __port_irq_dispatch(void) {
-
-  return gicv2Dispatch();
-}
-
 /*===========================================================================*/
 /* Driver exported functions.                                                */
 /*===========================================================================*/
 
-extern bool port_platform_timer_irq_handler(uint32_t intid);
-
 /**
- * @brief   Initializes simulator interrupt-controller support.
+ * @brief   IRQ subsystem initialization.
+ *
+ * @init
  */
-void __port_platform_init(os_instance_t *oip) {
-
-  (void)oip;
-
-  gicv2Init();
-  (void) gicv2RegisterHandler(R8_RENODE_PRIVATE_TIMER_IRQ,
-                              port_platform_timer_irq_handler);
-  gicv2EnableInterrupt(R8_RENODE_PRIVATE_TIMER_IRQ,
-                       R8_RENODE_PRIVATE_TIMER_PRIO,
-                       GICV2_CONFIG_LEVEL,
-                       GICV2_CPU_TARGET(0U));
+void irqInit(void) {
 }
 
 /** @} */
