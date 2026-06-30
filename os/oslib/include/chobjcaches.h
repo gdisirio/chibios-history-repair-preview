@@ -45,6 +45,19 @@
 #define OC_FLAG_FORGET                      0x00000020U
 /** @} */
 
+/**
+ * @name    Object cache options
+ * @{
+ */
+/**
+ * @brief   Use asynchronous writes for dirty objects eviction.
+ * @note    If this option is not specified then eviction writes are performed
+ *          synchronously.
+ */
+#define OC_CACHE_USE_ASYNC_WRITE            0x00000001U
+#define OC_CACHE_OPTIONS_MASK               OC_CACHE_USE_ASYNC_WRITE
+/** @} */
+
 /*===========================================================================*/
 /* Module pre-compile time settings.                                         */
 /*===========================================================================*/
@@ -65,6 +78,19 @@
  * @brief   Flags of cached objects.
  */
 typedef uint32_t oc_flags_t;
+
+/**
+ * @brief   Options of cache objects.
+ */
+typedef uint32_t oc_options_t;
+
+/**
+ * @brief   Type of a cached object key.
+ */
+#if !defined(CH_OC_KEYT_DEFINED) || defined(__DOXYGEN__)
+typedef uintptr_t oc_key_t;
+#define CH_OC_KEYT_DEFINED                 TRUE
+#endif
 
 /**
  * @brief   Type of an hash element header.
@@ -106,7 +132,8 @@ typedef bool (*oc_readf_t)(objects_cache_t *ocp,
  * @param[in] objp      pointer to the @p oc_object_t object
  * @param[in] async     requests an asynchronous operation if supported, the
  *                      function is then responsible for releasing the
- *                      object
+ *                      object and clearing @p OC_FLAG_LAZYWRITE on
+ *                      successful completion
  */
 typedef bool (*oc_writef_t)(objects_cache_t *ocp,
                             oc_object_t *objp,
@@ -159,7 +186,7 @@ struct oc_object {
   /**
    * @brief   Object key.
    */
-  uint32_t              obj_key;
+  oc_key_t              obj_key;
   /**
    * @brief   Semaphore for object access.
    */
@@ -201,6 +228,10 @@ struct objects_cache {
    */
   void                  *objvp;
   /**
+   * @brief   Cache options.
+   */
+  oc_options_t          options;
+  /**
    * @brief   LRU list header.
    */
   oc_lru_element_t      list;
@@ -235,11 +266,12 @@ extern "C" {
                          ucnt_t objn,
                          size_t objsz,
                          void *objvp,
+                         oc_options_t options,
                          oc_readf_t readf,
                          oc_writef_t writef);
   oc_object_t *chCacheGetObject(objects_cache_t *ocp,
                                 void *owner,
-                                uint32_t key);
+                                oc_key_t key);
   void chCacheReleaseObjectI(objects_cache_t *ocp,
                              oc_object_t *objp);
   bool chCacheReadObject(objects_cache_t *ocp,

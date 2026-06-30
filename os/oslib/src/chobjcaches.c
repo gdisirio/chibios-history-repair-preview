@@ -132,7 +132,7 @@
  */
 static oc_object_t *hash_get_s(objects_cache_t *ocp,
                                void *owner,
-                               uint32_t key) {
+                               oc_key_t key) {
   oc_hash_element_t *hep, *p;
 
   /* Hash slot where to search for an hit.*/
@@ -163,6 +163,7 @@ static oc_object_t *hash_get_s(objects_cache_t *ocp,
  */
 static oc_object_t *lru_get_last_s(objects_cache_t *ocp) {
   oc_object_t *objp;
+  bool error;
 
   while (true) {
     /* Waiting for an object buffer to become available in the LRU.*/
@@ -199,17 +200,46 @@ static oc_object_t *lru_get_last_s(objects_cache_t *ocp) {
       return objp;
     }
 
-    /* Out of critical section.*/
-    chSysUnlock();
+    if ((ocp->options & OC_CACHE_USE_ASYNC_WRITE) != 0U) {
+      objp->obj_flags = OC_FLAG_INHASH | OC_FLAG_FORGET | OC_FLAG_LAZYWRITE;
 
-   /* Invoking the writer asynchronously, it will release the buffer once it
-      is written. It is responsibility of the write function to release
-      the buffer.*/
-    objp->obj_flags = OC_FLAG_INHASH | OC_FLAG_FORGET;
-    (void) ocp->writef(ocp, objp, true);
+      /* Out of critical section.*/
+      chSysUnlock();
 
-    /* Critical section enter again.*/
-    chSysLock();
+      /* Invoking the writer asynchronously, it will release the buffer once it
+         is written. It is responsibility of the write function to release
+         the buffer.*/
+      (void) ocp->writef(ocp, objp, true);
+
+      /* Critical section enter again.*/
+      chSysLock();
+    }
+    else {
+      /* Out of critical section.*/
+      chSysUnlock();
+
+      /* Synchronous write, the object remains owned by this thread.*/
+      error = chCacheWriteObject(ocp, objp, false);
+
+      /* Critical section enter again.*/
+      chSysLock();
+
+      if (error == false) {
+
+        /* Removing from hash table if required.*/
+        if ((objp->obj_flags & OC_FLAG_INHASH) != 0U) {
+          HASH_REMOVE(objp);
+        }
+
+        /* Removing all flags, it is "new" now.*/
+        objp->obj_flags = 0U;
+
+        return objp;
+      }
+
+      /* Releasing the object back to the cache, still marked as lazy write.*/
+      chCacheReleaseObjectI(ocp, objp);
+    }
   }
 }
 
@@ -231,6 +261,9 @@ static oc_object_t *lru_get_last_s(objects_cache_t *ocp) {
  *                      minimum value is <tt>sizeof (oc_object_t)</tt>.
  * @param[in] objvp     pointer to the hash objects as an array of structures
  *                      starting with an @p oc_object_t
+ * @param[in] options   cache options, if @p OC_CACHE_USE_ASYNC_WRITE is not
+ *                      specified then eviction writes are performed
+ *                      synchronously
  * @param[in] readf     pointer to an object reader function
  * @param[in] writef    pointer to an object writer function
  *
@@ -242,6 +275,7 @@ void chCacheObjectInit(objects_cache_t *ocp,
                        ucnt_t objn,
                        size_t objsz,
                        void *objvp,
+                       oc_options_t options,
                        oc_readf_t readf,
                        oc_writef_t writef) {
 
@@ -249,7 +283,8 @@ void chCacheObjectInit(objects_cache_t *ocp,
              ((hashn & (hashn - (ucnt_t)1)) == (ucnt_t)0) &&
              (objn > (ucnt_t)0) && (hashn >= objn) &&
              (objsz >= sizeof (oc_object_t)) &&
-             ((objsz & (PORT_NATURAL_ALIGN - 1U)) == 0U));
+             ((objsz & (PORT_NATURAL_ALIGN - 1U)) == 0U) &&
+             ((options & ~OC_CACHE_OPTIONS_MASK) == 0U));
 
   chSemObjectInit(&ocp->lru_sem, (cnt_t)objn);
   ocp->hashn            = hashn;
@@ -257,6 +292,7 @@ void chCacheObjectInit(objects_cache_t *ocp,
   ocp->objn             = objn;
   ocp->objsz            = objsz;
   ocp->objvp            = objvp;
+  ocp->options          = options;
   ocp->readf            = readf;
   ocp->writef           = writef;
   ocp->list.h.next      = NULL;
@@ -301,7 +337,7 @@ void chCacheObjectInit(objects_cache_t *ocp,
  */
 oc_object_t *chCacheGetObject(objects_cache_t *ocp,
                               void *owner,
-                              uint32_t key) {
+                              oc_key_t key) {
   oc_object_t *objp;
 
   /* Critical section enter, the hash check operation is fast.*/
@@ -469,7 +505,8 @@ bool chCacheReadObject(objects_cache_t *ocp,
  * @param[in] objp      pointer to the @p oc_object_t object
  * @param[in] async     requests an asynchronous operation if supported, the
  *                      called function is then responsible for releasing the
- *                      object
+ *                      object and clearing @p OC_FLAG_LAZYWRITE on
+ *                      successful completion
  * @return              The operation status. In case of asynchronous
  *                      operation @p false is always returned.
  * @retval false        if the operation succeeded.
@@ -480,12 +517,15 @@ bool chCacheReadObject(objects_cache_t *ocp,
 bool chCacheWriteObject(objects_cache_t *ocp,
                         oc_object_t *objp,
                         bool async) {
+  bool error;
 
-  /* Resetting the OC_FLAG_LAZYWRITE flag in order to prevent multiple
-     writes.*/
-  objp->obj_flags &= ~OC_FLAG_LAZYWRITE;
+  error = ocp->writef(ocp, objp, async);
+  if ((error == false) && (async == false)) {
+    /* Resetting the OC_FLAG_LAZYWRITE flag on confirmed success.*/
+    objp->obj_flags &= ~OC_FLAG_LAZYWRITE;
+  }
 
-  return ocp->writef(ocp, objp, async);
+  return error;
 }
 
 #endif /* CH_CFG_USE_OBJ_CACHES == TRUE */

@@ -72,6 +72,7 @@
 #define CH_CUSTOMER_LIC_PORT_CM4 TRUE
 #define CH_CUSTOMER_LIC_PORT_CM7 TRUE
 #define CH_CUSTOMER_LIC_PORT_CM33 TRUE
+#define CH_CUSTOMER_LIC_PORT_CM55 TRUE
 #define CH_CUSTOMER_LIC_PORT_ARM79 TRUE
 #define CH_CUSTOMER_LIC_PORT_E200Z0 TRUE
 #define CH_CUSTOMER_LIC_PORT_E200Z2 TRUE
@@ -552,7 +553,6 @@ struct port_context {
 #define PORT_IRQ_IS_VALID_PRIORITY(n) (((n) >= 0U) && ((n) < CORTEX_PRIORITY_LEVELS))
 #define PORT_IRQ_IS_VALID_KERNEL_PRIORITY(n) (((n) >= CORTEX_MAX_KERNEL_PRIORITY) && ((n) <= CORTEX_MIN_KERNEL_PRIORITY))
 #define PORT_THD_FUNCTION(tname,arg) void tname(void *arg)
-#define PORT_SETUP_CONTEXT(tp,wbase,wtop,pf,arg) do { (tp)->ctx.sp = (struct port_intctx *)(void *) ((uint8_t *)(wtop) - sizeof (struct port_intctx)); (tp)->ctx.sp->r4 = (uint32_t)(pf); (tp)->ctx.sp->r5 = (uint32_t)(arg); (tp)->ctx.sp->lr = (uint32_t)__port_thread_start; } while (false)
 #define PORT_WA_CTX_SIZE (sizeof (struct port_intctx) + sizeof (struct port_extctx) + sizeof (struct port_extctx))
 #define PORT_WA_SIZE(n) ((size_t)PORT_GUARD_PAGE_SIZE + (size_t)PORT_WA_CTX_SIZE + (size_t)(n) + (size_t)PORT_INT_REQUIRED_STACK)
 #define PORT_IRQ_PROLOGUE() 
@@ -603,6 +603,20 @@ __STATIC_FORCEINLINE void port_enable(void) {
   __enable_irq();
 }
 __STATIC_FORCEINLINE void port_wait_for_interrupt(void) {
+}
+static inline void port_setup_context_base(struct port_context *ctxp) {
+  (void)ctxp;
+}
+static inline void port_setup_context(struct port_context *ctxp,
+                                      void *wbase, void *wtop,
+                                      void (*pf)(void *), void *arg) {
+  port_setup_context_base(ctxp);
+  (void)wbase;
+  ctxp->sp = (struct port_intctx *)(void *)((uint8_t *)wtop -
+                                            sizeof (struct port_intctx));
+  ctxp->sp->r4 = (uint32_t)pf;
+  ctxp->sp->r5 = (uint32_t)arg;
+  ctxp->sp->lr = (uint32_t)__port_thread_start;
 }
 __STATIC_FORCEINLINE rtcnt_t port_rt_get_counter_value(void) {
   return DWT->CYCCNT;
@@ -665,6 +679,7 @@ static inline void ch_list_link(ch_list_t *lp, ch_list_t *p) {
   lp->next = p;
 }
 static inline ch_list_t *ch_list_unlink(ch_list_t *lp) {
+  chDbgAssert(ch_list_notempty(lp), "empty list");
   ch_list_t *p = lp->next;
   lp->next = p->next;
   return p;
@@ -686,6 +701,7 @@ static inline void ch_queue_insert(ch_queue_t *qp, ch_queue_t *p) {
   qp->prev = p;
 }
 static inline ch_queue_t *ch_queue_fifo_remove(ch_queue_t *qp) {
+  chDbgAssert(ch_queue_notempty(qp), "empty queue");
   ch_queue_t *p = qp->next;
   qp->next = p->next;
   qp->next->prev = qp;
@@ -1176,7 +1192,10 @@ static inline void __vt_object_init(virtual_timers_list_t *vtlp) {
 static inline void ch_sch_prio_insert(ch_queue_t *qp, ch_queue_t *tp) {
   ch_queue_t *cp = qp;
   do {
-    cp = cp->next;
+    ch_queue_t *next = cp->next;
+    chSftValidateDataPointerX(3, next);
+    chSftAssert(2, next->prev == cp, "link back");
+    cp = next;
   } while ((cp != qp) &&
            (threadref(cp)->hdr.pqueue.prio >= threadref(tp)->hdr.pqueue.prio));
   tp->next = cp;
@@ -1344,6 +1363,7 @@ typedef struct {
   thread_t *chRegNextThread(thread_t *tp);
   thread_t *chRegFindThreadByName(const char *name);
   thread_t *chRegFindThreadByPointer(thread_t *tp);
+  bool chRegIsWorkingAreaInUseI(stkline_t *wa);
   thread_t *chRegFindThreadByWorkingArea(stkline_t *wa);
 static inline void __reg_object_init(registry_t *rp) {
   ch_queue_init(&rp->queue);
@@ -1988,7 +2008,12 @@ static inline void chPipeResume(pipe_t *pp) {
 #define OC_FLAG_NOTSYNC 0x00000008U
 #define OC_FLAG_LAZYWRITE 0x00000010U
 #define OC_FLAG_FORGET 0x00000020U
+#define OC_CACHE_USE_ASYNC_WRITE 0x00000001U
+#define OC_CACHE_OPTIONS_MASK OC_CACHE_USE_ASYNC_WRITE
 typedef uint32_t oc_flags_t;
+typedef uint32_t oc_options_t;
+typedef uintptr_t oc_key_t;
+#define CH_OC_KEYT_DEFINED TRUE
 typedef struct oc_hash_element oc_hash_element_t;
 typedef struct oc_lru_element oc_lru_element_t;
 typedef struct oc_object oc_object_t;
@@ -2011,7 +2036,7 @@ struct oc_lru_element {
 struct oc_object {
   oc_lru_element_t list;
   void *obj_owner;
-  uint32_t obj_key;
+  oc_key_t obj_key;
   semaphore_t obj_sem;
   oc_flags_t obj_flags;
   void *dptr;
@@ -2022,6 +2047,7 @@ struct objects_cache {
   ucnt_t objn;
   size_t objsz;
   void *objvp;
+  oc_options_t options;
   oc_lru_element_t list;
   semaphore_t lru_sem;
   oc_readf_t readf;
@@ -2033,11 +2059,12 @@ struct objects_cache {
                          ucnt_t objn,
                          size_t objsz,
                          void *objvp,
+                         oc_options_t options,
                          oc_readf_t readf,
                          oc_writef_t writef);
   oc_object_t *chCacheGetObject(objects_cache_t *ocp,
                                 void *owner,
-                                uint32_t key);
+                                oc_key_t key);
   void chCacheReleaseObjectI(objects_cache_t *ocp,
                              oc_object_t *objp);
   bool chCacheReadObject(objects_cache_t *ocp,

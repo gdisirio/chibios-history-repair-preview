@@ -1447,6 +1447,7 @@ typedef struct {
 static oc_hash_element_t hash_elements[NUM_HASH_ENTRIES];
 static cached_object_t objects[NUM_OBJECTS];
 static objects_cache_t cache1;
+static bool write_failure;
 
 static bool obj_read(objects_cache_t *ocp,
                      oc_object_t *objp,
@@ -1471,7 +1472,7 @@ static bool obj_write(objects_cache_t *ocp,
 
   test_emit_token('A' + objp->obj_key);
 
-  return false;
+  return write_failure;
 }]]></value>
       </shared_code>
       <cases>
@@ -1514,6 +1515,7 @@ chCacheObjectInit(&cache1,
                   NUM_OBJECTS,
                   sizeof (cached_object_t),
                   objects,
+                  OC_CACHE_USE_ASYNC_WRITE,
                   obj_read,
                   obj_write);
 ]]></value>
@@ -1529,7 +1531,7 @@ chCacheObjectInit(&cache1,
               </tags>
               <code>
                 <value><![CDATA[
-uint32_t i;
+oc_key_t i;
 
 for (i = 0; i < (NUM_OBJECTS * 2); i++) {
   oc_object_t * objp = chCacheGetObject(&cache1, NULL, i);
@@ -1554,7 +1556,7 @@ test_assert_sequence("", "unexpected tokens");
               </tags>
               <code>
                 <value><![CDATA[
-uint32_t i;
+oc_key_t i;
 bool error;
 
 for (i = 0; i < (NUM_OBJECTS * 2); i++) {
@@ -1586,7 +1588,7 @@ test_assert_sequence("abcdefgh", "unexpected tokens");
               </tags>
               <code>
                 <value><![CDATA[
-uint32_t i;
+oc_key_t i;
 bool error;
 
 for (i = 0; i < (NUM_OBJECTS * 2); i++) {
@@ -1620,7 +1622,7 @@ test_assert_sequence("abcdefgh", "unexpected tokens");
               </tags>
               <code>
                 <value><![CDATA[
-uint32_t i;
+oc_key_t i;
 
 for (i = NUM_OBJECTS; i < (NUM_OBJECTS * 2); i++) {
   oc_object_t *objp = chCacheGetObject(&cache1, NULL, i);
@@ -1644,7 +1646,7 @@ test_assert_sequence("", "unexpected tokens");
               </tags>
               <code>
                 <value><![CDATA[
-uint32_t i;
+oc_key_t i;
 
 for (i = 0; i < NUM_OBJECTS; i++) {
   oc_object_t *objp = chCacheGetObject(&cache1, NULL, i);
@@ -1669,7 +1671,7 @@ test_assert_sequence("", "unexpected tokens");
               <code>
                 <value><![CDATA[
 bool error;
-uint32_t i;
+oc_key_t i;
 
 {
   oc_object_t *objp = chCacheGetObject(&cache1, NULL, NUM_OBJECTS);
@@ -1696,7 +1698,7 @@ for (i = 0; i < 16U; i++) {
 }
 
 {
-  oc_object_t *objp = chCacheGetObject(&cache1, NULL, 0U);
+  oc_object_t *objp = chCacheGetObject(&cache1, NULL, (oc_key_t)0);
 
   test_assert((objp->obj_flags & OC_FLAG_INHASH) != 0U, "not in hash");
   test_assert((objp->obj_flags & OC_FLAG_NOTSYNC) != 0U, "in sync");
@@ -1705,6 +1707,90 @@ for (i = 0; i < 16U; i++) {
 }
 
 test_assert_sequence("", "unexpected tokens");
+]]></value>
+              </code>
+            </step>
+            <step>
+              <description>
+                <value>Write failures keep the object marked for lazy
+                  write.</value>
+              </description>
+              <tags>
+                <value></value>
+              </tags>
+              <code>
+                <value><![CDATA[
+oc_object_t *objp;
+bool error;
+
+objp = chCacheGetObject(&cache1, NULL, NUM_OBJECTS);
+if ((objp->obj_flags & OC_FLAG_NOTSYNC) != 0U) {
+  error = chCacheReadObject(&cache1, objp, false);
+  test_assert(error == false, "returned error");
+}
+
+objp->obj_flags |= OC_FLAG_LAZYWRITE;
+write_failure = true;
+error = chCacheWriteObject(&cache1, objp, false);
+write_failure = false;
+
+test_assert(error == true, "not failed");
+test_assert((objp->obj_flags & OC_FLAG_LAZYWRITE) != 0U, "lazy flag cleared");
+
+error = chCacheWriteObject(&cache1, objp, false);
+test_assert(error == false, "returned error");
+test_assert((objp->obj_flags & OC_FLAG_LAZYWRITE) == 0U, "lazy flag not cleared");
+
+chCacheReleaseObject(&cache1, objp);
+
+test_assert_sequence("EE", "unexpected tokens");
+]]></value>
+              </code>
+            </step>
+            <step>
+              <description>
+                <value>Dirty objects are written synchronously when
+                  asynchronous eviction is not enabled.</value>
+              </description>
+              <tags>
+                <value></value>
+              </tags>
+              <code>
+                <value><![CDATA[
+oc_key_t i;
+
+chCacheObjectInit(&cache1,
+                  NUM_HASH_ENTRIES,
+                  hash_elements,
+                  NUM_OBJECTS,
+                  sizeof (cached_object_t),
+                  objects,
+                  0U,
+                  obj_read,
+                  obj_write);
+
+for (i = 0; i < NUM_OBJECTS; i++) {
+  oc_object_t *objp;
+  bool error;
+
+  objp = chCacheGetObject(&cache1, NULL, i);
+  error = chCacheReadObject(&cache1, objp, false);
+
+  test_assert(error == false, "returned error");
+
+  objp->obj_flags |= OC_FLAG_LAZYWRITE;
+  chCacheReleaseObject(&cache1, objp);
+}
+
+{
+  oc_object_t *objp = chCacheGetObject(&cache1, NULL, NUM_OBJECTS);
+
+  test_assert((objp->obj_flags & OC_FLAG_NOTSYNC) != 0U, "in sync");
+
+  chCacheReleaseObject(&cache1, objp);
+}
+
+test_assert_sequence("abcdA", "unexpected tokens");
 ]]></value>
               </code>
             </step>

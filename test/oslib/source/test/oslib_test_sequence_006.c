@@ -61,6 +61,7 @@ typedef struct {
 static oc_hash_element_t hash_elements[NUM_HASH_ENTRIES];
 static cached_object_t objects[NUM_OBJECTS];
 static objects_cache_t cache1;
+static bool write_failure;
 
 static bool obj_read(objects_cache_t *ocp,
                      oc_object_t *objp,
@@ -85,7 +86,7 @@ static bool obj_write(objects_cache_t *ocp,
 
   test_emit_token('A' + objp->obj_key);
 
-  return false;
+  return write_failure;
 }
 
 /****************************************************************************
@@ -108,6 +109,9 @@ static bool obj_write(objects_cache_t *ocp,
  * - [6.1.5] Checking cached objects.
  * - [6.1.6] Checking non-cached objects.
  * - [6.1.7] Repeated cached hits followed by a miss.
+ * - [6.1.8] Write failures keep the object marked for lazy write.
+ * - [6.1.9] Dirty objects are written synchronously when asynchronous
+ *   eviction is not enabled.
  * .
  */
 
@@ -122,6 +126,7 @@ static void oslib_test_006_001_execute(void) {
                       NUM_OBJECTS,
                       sizeof (cached_object_t),
                       objects,
+                      OC_CACHE_USE_ASYNC_WRITE,
                       obj_read,
                       obj_write);
   }
@@ -130,7 +135,7 @@ static void oslib_test_006_001_execute(void) {
   /* [6.1.2] Getting and releasing objects without initialization.*/
   test_set_step(2);
   {
-    uint32_t i;
+    oc_key_t i;
 
     for (i = 0; i < (NUM_OBJECTS * 2); i++) {
       oc_object_t * objp = chCacheGetObject(&cache1, NULL, i);
@@ -149,7 +154,7 @@ static void oslib_test_006_001_execute(void) {
      initialization.*/
   test_set_step(3);
   {
-    uint32_t i;
+    oc_key_t i;
     bool error;
 
     for (i = 0; i < (NUM_OBJECTS * 2); i++) {
@@ -175,7 +180,7 @@ static void oslib_test_006_001_execute(void) {
      initialization.*/
   test_set_step(4);
   {
-    uint32_t i;
+    oc_key_t i;
     bool error;
 
     for (i = 0; i < (NUM_OBJECTS * 2); i++) {
@@ -203,7 +208,7 @@ static void oslib_test_006_001_execute(void) {
   /* [6.1.5] Checking cached objects.*/
   test_set_step(5);
   {
-    uint32_t i;
+    oc_key_t i;
 
     for (i = NUM_OBJECTS; i < (NUM_OBJECTS * 2); i++) {
       oc_object_t *objp = chCacheGetObject(&cache1, NULL, i);
@@ -221,7 +226,7 @@ static void oslib_test_006_001_execute(void) {
   /* [6.1.6] Checking non-cached objects.*/
   test_set_step(6);
   {
-    uint32_t i;
+    oc_key_t i;
 
     for (i = 0; i < NUM_OBJECTS; i++) {
       oc_object_t *objp = chCacheGetObject(&cache1, NULL, i);
@@ -240,7 +245,7 @@ static void oslib_test_006_001_execute(void) {
   test_set_step(7);
   {
     bool error;
-    uint32_t i;
+    oc_key_t i;
 
     {
       oc_object_t *objp = chCacheGetObject(&cache1, NULL, NUM_OBJECTS);
@@ -267,7 +272,7 @@ static void oslib_test_006_001_execute(void) {
     }
 
     {
-      oc_object_t *objp = chCacheGetObject(&cache1, NULL, 0U);
+      oc_object_t *objp = chCacheGetObject(&cache1, NULL, (oc_key_t)0);
 
       test_assert((objp->obj_flags & OC_FLAG_INHASH) != 0U, "not in hash");
       test_assert((objp->obj_flags & OC_FLAG_NOTSYNC) != 0U, "in sync");
@@ -278,6 +283,77 @@ static void oslib_test_006_001_execute(void) {
     test_assert_sequence("", "unexpected tokens");
   }
   test_end_step(7);
+
+  /* [6.1.8] Write failures keep the object marked for lazy write.*/
+  test_set_step(8);
+  {
+    oc_object_t *objp;
+    bool error;
+
+    objp = chCacheGetObject(&cache1, NULL, NUM_OBJECTS);
+    if ((objp->obj_flags & OC_FLAG_NOTSYNC) != 0U) {
+      error = chCacheReadObject(&cache1, objp, false);
+      test_assert(error == false, "returned error");
+    }
+
+    objp->obj_flags |= OC_FLAG_LAZYWRITE;
+    write_failure = true;
+    error = chCacheWriteObject(&cache1, objp, false);
+    write_failure = false;
+
+    test_assert(error == true, "not failed");
+    test_assert((objp->obj_flags & OC_FLAG_LAZYWRITE) != 0U, "lazy flag cleared");
+
+    error = chCacheWriteObject(&cache1, objp, false);
+    test_assert(error == false, "returned error");
+    test_assert((objp->obj_flags & OC_FLAG_LAZYWRITE) == 0U, "lazy flag not cleared");
+
+    chCacheReleaseObject(&cache1, objp);
+
+    test_assert_sequence("EE", "unexpected tokens");
+  }
+  test_end_step(8);
+
+  /* [6.1.9] Dirty objects are written synchronously when asynchronous
+     eviction is not enabled.*/
+  test_set_step(9);
+  {
+    oc_key_t i;
+
+    chCacheObjectInit(&cache1,
+                      NUM_HASH_ENTRIES,
+                      hash_elements,
+                      NUM_OBJECTS,
+                      sizeof (cached_object_t),
+                      objects,
+                      0U,
+                      obj_read,
+                      obj_write);
+
+    for (i = 0; i < NUM_OBJECTS; i++) {
+      oc_object_t *objp;
+      bool error;
+
+      objp = chCacheGetObject(&cache1, NULL, i);
+      error = chCacheReadObject(&cache1, objp, false);
+
+      test_assert(error == false, "returned error");
+
+      objp->obj_flags |= OC_FLAG_LAZYWRITE;
+      chCacheReleaseObject(&cache1, objp);
+    }
+
+    {
+      oc_object_t *objp = chCacheGetObject(&cache1, NULL, NUM_OBJECTS);
+
+      test_assert((objp->obj_flags & OC_FLAG_NOTSYNC) != 0U, "in sync");
+
+      chCacheReleaseObject(&cache1, objp);
+    }
+
+    test_assert_sequence("abcdA", "unexpected tokens");
+  }
+  test_end_step(9);
 }
 
 static const testcase_t oslib_test_006_001 = {
