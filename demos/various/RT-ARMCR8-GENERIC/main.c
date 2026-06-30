@@ -14,9 +14,11 @@
     limitations under the License.
 */
 
+#include "armcr8.h"
 #include "ch.h"
 
 #define R8_RENODE_PRIVATE_TIMER_BASE 0xAE000600U
+#define R8_RENODE_PRIVATE_TIMER_IRQ  29U
 #define R8_RENODE_PRIVATE_TIMER_FREQ 667000000U
 
 #define PTIMER_CONTROL_ENABLE        (1U << 0)
@@ -42,27 +44,37 @@ static volatile uint32_t fpu_error_counter;
 #endif
 
 /*
- * Demo-private timer interrupt handler.
+ * Demo-private IRQ dispatcher.
  */
-bool port_platform_timer_irq_handler(uint32_t intid) {
+bool __port_irq_dispatch(void) {
+  IRQn_Type irqn;
   bool preemption_required;
 
-  (void)intid;
-
   preemption_required = false;
-  R8_PRIVATE_TIMER->ISR = PTIMER_ISR_EVENT;
+  irqn = GIC_AcknowledgePending();
 
-  chSysLockFromISR();
-  chSysTimerHandlerI();
-  preemption_required = chSchIsPreemptionRequired();
-  chSysUnlockFromISR();
+  if (irqn == (IRQn_Type)R8_RENODE_PRIVATE_TIMER_IRQ) {
+    R8_PRIVATE_TIMER->ISR = PTIMER_ISR_EVENT;
+
+    chSysLockFromISR();
+    chSysTimerHandlerI();
+    preemption_required = chSchIsPreemptionRequired();
+    chSysUnlockFromISR();
+  }
+
+  GIC_EndInterrupt(irqn);
 
   return preemption_required;
 }
 
-/*
- * Demo-private timer setup.
- */
+static void gic_init(void) {
+
+  GIC_Enable();
+  GIC_SetPriority((IRQn_Type)R8_RENODE_PRIVATE_TIMER_IRQ, 0x80U);
+  GIC_SetTarget((IRQn_Type)R8_RENODE_PRIVATE_TIMER_IRQ, 1U);
+  GIC_EnableIRQ((IRQn_Type)R8_RENODE_PRIVATE_TIMER_IRQ);
+}
+
 static void timer_init(void) {
   uint32_t interval;
 
@@ -134,13 +146,14 @@ int main(void) {
   double expected;
 #endif
 
+  gic_init();
+  timer_init();
+
   /*
    * System initialization, the main() function becomes a thread and the
    * RTOS is active.
    */
   chSysInit();
-
-  timer_init();
 
   (void) chThdCreateStatic(waThread1,
                            sizeof(waThread1),
