@@ -286,7 +286,7 @@ ${line + ");"}
           value  = (define.@value[0]!"no-value")?trim]
   [#if define.param[0]??]
     [#local params = MakeCallParamsSequence([], define)]
-    [#local s = ("#define " + name +  "(" + params?join(", ") + ")")?right_pad(define_value_align) + value]
+    [#local s = ("#define " + name +  "(" + params?join(", ") + ") ")?right_pad(define_value_align) + value]
   [#else]
     [#local s = ("#define " + name +  " ")?right_pad(define_value_align) + value]
   [/#if]

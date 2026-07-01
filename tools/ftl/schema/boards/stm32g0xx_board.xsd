@@ -15,6 +15,9 @@
                        	<xs:restriction base="xs:string">
                        		<xs:whiteSpace value="collapse"></xs:whiteSpace>
                             <xs:enumeration value="STM32G030xx"></xs:enumeration>
+                            <xs:enumeration value="STM32G050xx"></xs:enumeration>
+                            <xs:enumeration value="STM32G051xx"></xs:enumeration>
+                            <xs:enumeration value="STM32G061xx"></xs:enumeration>
                             <xs:enumeration value="STM32G070xx"></xs:enumeration>
                             <xs:enumeration value="STM32G031xx"></xs:enumeration>
                             <xs:enumeration value="STM32G041xx"></xs:enumeration>
@@ -112,22 +115,22 @@
   <xs:complexType name="portsType">
     <xs:sequence>
     	<xs:element name="GPIOA" type="STM32GPIOv2PortType"
-    		minOccurs="1" maxOccurs="1">
+    		minOccurs="0" maxOccurs="1">
     	</xs:element>
     	<xs:element name="GPIOB" type="STM32GPIOv2PortType"
-    		minOccurs="1" maxOccurs="1">
+    		minOccurs="0" maxOccurs="1">
     	</xs:element>
     	<xs:element name="GPIOC" type="STM32GPIOv2PortType"
-    		minOccurs="1" maxOccurs="1">
+    		minOccurs="0" maxOccurs="1">
     	</xs:element>
         <xs:element name="GPIOD" type="STM32GPIOv2PortType"
-            maxOccurs="1" minOccurs="1">
+            maxOccurs="1" minOccurs="0">
         </xs:element>
         <xs:element name="GPIOE" type="STM32GPIOv2PortType"
-            maxOccurs="1" minOccurs="1">
+            maxOccurs="1" minOccurs="0">
         </xs:element>
 	   	<xs:element name="GPIOF" type="STM32GPIOv2PortType"
-    		maxOccurs="1" minOccurs="1">
+    		maxOccurs="1" minOccurs="0">
     	</xs:element>
     </xs:sequence>
   </xs:complexType>

@@ -220,6 +220,7 @@
         </xs:attribute>
         <xs:attribute name="ancestorname" type="identifierType">
         </xs:attribute>
+        <xs:attribute name="check" type="xs:string"></xs:attribute>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -322,6 +323,9 @@
               <xs:complexType />
             </xs:element>
             <xs:element name="xclass" maxOccurs="1" minOccurs="1">
+              <xs:complexType />
+            </xs:element>
+            <xs:element name="special" maxOccurs="1" minOccurs="1">
               <xs:complexType />
             </xs:element>
           </xs:choice>

@@ -24,6 +24,40 @@
 [#import "/@ftllibs/libcclasses.ftl" as cclasses /]
 [@pp.dropOutputFile /]
 [#assign instance = xml.instance /]
+[#--
+  -- Returns true if the node subtree contains an element with the specified
+  -- name.
+  --]
+[#function ContainsElement node name]
+  [#list node.* as child]
+    [#if child?node_name == name]
+      [#return true]
+    [/#if]
+    [#if ContainsElement(child, name)]
+      [#return true]
+    [/#if]
+  [/#list]
+  [#return false]
+[/#function]
+[#--
+  -- Returns true if a module can emit a source file with real contents.
+  -- This mirrors the current generated/drop decision without creating an
+  -- output file first.
+  --]
+[#function ModuleHasSourceContents module]
+  [#if (module.@editcode[0]!"no")?trim == "true"]
+    [#return true]
+  [/#if]
+  [#if ContainsElement(module.private.variables, "variable") ||
+       ContainsElement(module.public.variables,  "variable") ||
+       ContainsElement(module.private.functions, "function") ||
+       ContainsElement(module.public.functions,  "function") ||
+       ContainsElement(module.private.types,     "class") ||
+       ContainsElement(module.public.types,      "class")]
+    [#return true]
+  [/#if]
+  [#return false]
+[/#function]
 [#-- Scanning all files to be generated.--]
 [#list instance.modules.module as module]
   [#-- Generating the source file.--]
@@ -34,9 +68,10 @@
   [#assign moduleimplname    = modulename + "_impl.inc" /]
   [#assign modulesourcepath  = (module.@sourcepath[0]!"src")?trim?ensure_ends_with("/") /]
   [#assign moduledocgroup    = modulename?upper_case /]
-  [#-- Generating source file.--]
-  [@pp.changeOutputFile name=pp.home?trim?ensure_ends_with("/") + modulesourcepath + modulesourcename /]
-  [@cclasses.InitModule node=module /]
+  [#if ModuleHasSourceContents(module)]
+    [#-- Generating source file.--]
+    [@pp.changeOutputFile name=pp.home?trim?ensure_ends_with("/") + modulesourcepath + modulesourcename /]
+    [@cclasses.InitModule node=module /]
 /*
 [@license.EmitLicenseAsText /]
 */
@@ -141,4 +176,5 @@
 
   [/#if]
 /** @} */
+  [/#if]
 [/#list]
